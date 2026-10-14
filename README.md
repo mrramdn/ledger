@@ -10,7 +10,7 @@ A dense, dark-first design system for data-heavy product interfaces: dashboards,
 | --- | --- |
 | `ledger.css` | Tailwind CSS v4 theme: color tokens (light and dark, with a data palette `chart-1`…`chart-5`, `positive`, `negative`, `info`), radii, the one shadow, type utilities, slider, checkbox and sort-header utilities. Token names follow shadcn/ui. |
 | `DESIGN.md` | The rules and the 24 component recipes, in the [design.md](https://github.com/google-labs-code/design.md) format, with the measured contrast of both modes. |
-| `preview/index.html` | Component gallery: one card per recipe with placeholder content, showing variants, sizes and states. Has a dark mode switch, category filters, and copy and reset buttons per card. |
+| `preview/index.html` | Component gallery: one card per recipe with placeholder content, showing variants, sizes and states. Cards are grouped under category headings, with a dark mode switch and copy and reset buttons per card. |
 | `preview/demo.html` | An example screen, the billing and operations dashboard of a small software company, built only from the recipes. Dark first. |
 | `CHANGELOG.md` | What changed in each version. |
 

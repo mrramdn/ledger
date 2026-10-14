@@ -32,15 +32,9 @@
       </div>
     </header>
 
-    <div class="mx-auto max-w-[1600px] px-4 pt-4">
-      <div id="filters" class="-mx-1 flex gap-2 overflow-x-auto p-1" role="group" aria-label="Filter components"></div>
-    </div>
-
-    <!-- A masonry sheet: 1px rows, and each card spans as many as it is tall, so cards keep their natural height. -->
-    <main
-      id="gallery"
-      class="mx-auto grid max-w-[1600px] auto-rows-[1px] grid-flow-dense grid-cols-1 gap-x-4 px-4 pt-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-    ></main>
+    <!-- The cards in groups by category. Each group is a masonry: 1px rows, and each card spans as many as it is tall,
+         so cards keep their natural height. -->
+    <main id="gallery" class="mx-auto max-w-[1600px] px-4 pt-4"></main>
 
     <script>
       const icon = (paths, size = 16) =>
@@ -288,9 +282,9 @@
         },
       ];
 
-      const categories = ['Input', 'Data', 'Navigation', 'Status', 'Layout', 'Text'];
+      // Categories in the order they first appear in the list above.
+      const categories = [...new Set(components.map((c) => c.category))];
       const gallery = document.getElementById('gallery');
-      const filters = document.getElementById('filters');
       const theme = document.getElementById('theme');
 
       const syncDemo = (root) => {
@@ -303,24 +297,27 @@
       };
 
       theme.innerHTML = icons.theme;
-      document.getElementById('meta').textContent = `${components.length} components · 6 categories`;
-      const tally = (name) => (name === 'All' ? components.length : components.filter((c) => c.category === name).length);
-      filters.innerHTML = ['All', ...categories]
-        .map((name, i) => `<button type="button" aria-pressed="${i === 0}" class="${chip}">${name}<span class="${count}">${tally(name)}</span></button>`)
-        .join('');
-      gallery.innerHTML = components
-        .map(
-          (c, i) => `<article data-index="${i}" data-category="${c.category}" class="mb-4 flex flex-col self-start rounded-lg border border-border bg-card${c.span ? ' sm:col-span-2' : ''}">
+      document.getElementById('meta').textContent = `${components.length} components · ${categories.length} categories`;
+      const card = (c) => {
+        const i = components.indexOf(c);
+        return `<article data-index="${i}" data-category="${c.category}" class="mb-4 flex flex-col self-start rounded-lg border border-border bg-card${c.span ? ' sm:col-span-2' : ''}">
             <header class="flex h-10 shrink-0 items-center justify-between border-b border-border pr-2 pl-4">
-              <h2 class="type-title">${c.name}</h2>
+              <h3 class="type-title">${c.name}</h3>
               <div class="flex gap-0.5">
                 ${c.stateful ? `<button type="button" data-reset aria-label="Reset ${c.name}" class="${iconButton}">${icons.reset}</button>` : ''}
                 <button type="button" data-copy aria-label="Copy ${c.name} markup" class="${iconButton}">${icons.copy}</button>
               </div>
             </header>
             <div data-demo class="flex flex-col items-start p-4">${c.html}</div>
-          </article>`,
-        )
+          </article>`;
+      };
+      // A section title with the count, 24px above and below, then the group's cards.
+      gallery.innerHTML = categories
+        .map((name) => {
+          const group = components.filter((c) => c.category === name);
+          const id = `group-${name.toLowerCase()}`;
+          return `<section aria-labelledby="${id}"><h2 id="${id}" class="flex items-baseline gap-2 pt-2 pb-6 type-h2">${name}<span class="type-mono text-muted-foreground">${group.length}</span></h2><div class="grid auto-rows-[1px] grid-flow-dense grid-cols-1 gap-x-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">${group.map(card).join('')}</div></section>`;
+        })
         .join('');
       syncDemo(gallery);
 
@@ -328,17 +325,9 @@
       // the cards' own size (fonts loading, a tab with more rows, a narrower column), never the window's height.
       const fit = (card) => (card.style.gridRowEnd = `span ${Math.ceil(card.getBoundingClientRect().height) + 16}`);
       const observer = new ResizeObserver((entries) => entries.forEach((entry) => fit(entry.target)));
-      for (const card of gallery.children) observer.observe(card);
+      for (const article of gallery.querySelectorAll('article[data-index]')) observer.observe(article);
 
       theme.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
-
-      filters.addEventListener('click', (event) => {
-        const button = event.target.closest('button');
-        if (!button) return;
-        const name = button.firstChild.textContent;
-        for (const b of filters.children) b.setAttribute('aria-pressed', b === button);
-        for (const card of gallery.children) card.hidden = name !== 'All' && card.dataset.category !== name;
-      });
 
       gallery.addEventListener('input', (event) => syncDemo(event.target.closest('[data-demo]')));
 
