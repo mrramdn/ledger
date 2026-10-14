@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ledger</title>
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="preview.css" />
+  </head>
+  <body>
+    <header class="sticky top-0 z-20 border-b border-border bg-card">
+      <div class="mx-auto flex h-10 max-w-[1600px] items-center justify-between px-4">
+        <p class="flex items-baseline gap-2">
+          <span class="font-mono text-sm font-semibold tracking-tight">Ledger</span>
+          <span class="type-caption text-muted-foreground">Beta</span>
+        </p>
+        <div class="flex items-center gap-3">
+          <span class="hidden type-mono text-xs text-muted-foreground sm:inline">ops · ap-southeast-1 · 09:12:04 UTC</span>
+          <button
+            id="theme"
+            type="button"
+            aria-label="Switch between light and dark"
+            class="inline-flex size-8 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+          ></button>
+        </div>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-[1600px] px-4 pt-4">
+      <div id="filters" class="-mx-1 flex gap-2 overflow-x-auto p-1" role="group" aria-label="Filter components"></div>
+    </div>
+
+    <main
+      id="gallery"
+      class="mx-auto grid max-w-[1600px] auto-rows-[10rem] grid-flow-dense grid-cols-1 gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+    ></main>
+
+    <script>
+      const icon = (paths, size = 16) =>
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+      const icons = {
+        copy: icon('<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>'),
+        reset: icon('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>'),
+        check: icon('<path d="M20 6 9 17l-5-5"/>'),
+        theme: icon('<path d="M12 8a2.83 2.83 0 0 0 4 4 4 4 0 1 1-4-4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.3 17.7-1.4 1.4"/><path d="m19.1 4.9-1.4 1.4"/>'),
+        search: icon('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'),
+        chevronDown: icon('<path d="m6 9 6 6 6-6"/>', 14),
+        chevronLeft: icon('<path d="m15 18-6-6 6-6"/>'),
+        chevronRight: icon('<path d="m9 18 6-6-6-6"/>'),
+        more: icon('<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'),
+        download: icon('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>'),
+        refresh: icon('<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>'),
+        filter: icon('<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>'),
+        plus: icon('<path d="M5 12h14"/><path d="M12 5v14"/>'),
+        help: icon('<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'),
+        pin: icon('<path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/>'),
+      };
+      // Deltas carry a sign as well as a color: a small triangle, up or down.
+      const up = '<svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M4 1 7.5 7h-7z" fill="currentColor"/></svg>';
+      const down = '<svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M4 7 .5 1h7z" fill="currentColor"/></svg>';
+
+      // A sparkline path from values, drawn in a 240×48 box with 2px of headroom.
+      const spark = (values) => {
+        const min = Math.min(...values), max = Math.max(...values);
+        const pts = values.map((v, i) => [(i / (values.length - 1)) * 240, 46 - ((v - min) / (max - min || 1)) * 44]);
+        const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+        return { line, area: `${line} L240 48 L0 48 Z` };
+      };
+      const rps = spark([9860, 10120, 9940, 10480, 10310, 10920, 11240, 10880, 11410, 11620, 11380, 11950, 12210, 11890, 12480]);
+
+      const button =
+        'inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40';
+      const primary = `${button} bg-primary text-primary-foreground hover:bg-primary-hover`;
+      const secondary = `${button} border border-input bg-card text-foreground hover:bg-accent`;
+      const ghost = `${button} text-muted-foreground hover:bg-accent hover:text-foreground`;
+      const destructive = `${button} bg-destructive text-destructive-foreground hover:bg-destructive/90`;
+      const iconButton =
+        'inline-flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40';
+      const iconButtonSmall = iconButton.replace('size-8', 'size-7');
+      const chip =
+        'inline-flex h-7 shrink-0 items-center gap-1.5 rounded-sm border border-border bg-card px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-foreground';
+      const count = 'type-mono text-xs';
+      const segment =
+        'h-7 rounded-xs px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground';
+      const tab =
+        'inline-flex h-9 shrink-0 items-center gap-1.5 border-b-2 border-transparent px-1 type-ui text-muted-foreground transition-colors hover:text-foreground aria-selected:border-primary aria-selected:text-foreground';
+      const badge = 'inline-flex h-5 items-center rounded-sm border border-border bg-muted px-1.5 text-xs leading-4 font-medium';
+      const pill = 'inline-flex h-5 items-center gap-1.5 rounded-full border border-border px-2 text-xs leading-4 font-medium whitespace-nowrap';
+      const dot = (tone) => `<span class="size-1.5 rounded-full ${tone}" aria-hidden="true"></span>`;
+      const status = {
+        Paid: `<span class="${pill}">${dot('bg-success')}Paid</span>`,
+        Due: `<span class="${pill}">${dot('bg-warning')}Due</span>`,
+        Overdue: `<span class="${pill}">${dot('bg-negative')}Overdue</span>`,
+        Draft: `<span class="${pill}">${dot('bg-muted-foreground')}Draft</span>`,
+        Refunded: `<span class="${pill}">${dot('bg-info')}Refunded</span>`,
+      };
+      const switchControl =
+        'group relative h-5 w-9 shrink-0 rounded-sm bg-input transition-colors aria-checked:bg-primary disabled:opacity-40';
+      const thumb = 'absolute top-0.5 left-0.5 size-4 rounded-xs bg-white transition-transform group-aria-checked:translate-x-4';
+      const toggleRow = (label, on, hint = '') =>
+        `<div class="flex h-9 w-full items-center justify-between gap-4"><span class="type-small">${label}${hint ? ` <span class="text-muted-foreground">${hint}</span>` : ''}</span><button type="button" role="switch" aria-checked="${on}" aria-label="${label}" class="${switchControl}"><span class="${thumb}"></span></button></div>`;
+      const radio = 'size-4 shrink-0 appearance-none rounded-full border border-input bg-card transition-[border-width,border-color] checked:border-5 checked:border-primary';
+      const option = (name, value, label, hint = '', checked = false) =>
+        `<label class="flex h-8 items-center gap-2.5 type-small"><input type="radio" name="${name}" value="${value}"${checked ? ' checked' : ''} class="${radio}" />${label}${hint ? ` <span class="text-muted-foreground">${hint}</span>` : ''}</label>`;
+      const check = (label, state = '', hint = '') =>
+        `<label class="flex h-8 items-center gap-2.5 type-small"><input type="checkbox"${state === 'checked' ? ' checked' : state === 'mixed' ? ' data-indeterminate' : ''} class="ledger-checkbox" />${label}${hint ? ` <span class="text-muted-foreground">${hint}</span>` : ''}</label>`;
+      const field =
+        'h-8 w-full rounded-sm border border-input bg-card px-3 type-small text-foreground placeholder:text-muted-foreground disabled:opacity-40';
+      const slider = (id, label, value, min, max, unit, hint) =>
+        `<div class="w-full"><div class="flex items-baseline justify-between"><label for="${id}" class="type-ui">${label}</label><output for="${id}" class="type-mono text-muted-foreground" data-unit="${unit}">${value}${unit}</output></div><input id="${id}" type="range" min="${min}" max="${max}" value="${value}" class="ledger-slider mt-2" /><p class="mt-2 type-caption text-muted-foreground">${hint}</p></div>`;
+      const kbd = 'inline-flex h-5 min-w-5 items-center justify-center rounded-xs border border-b-2 border-border bg-muted px-1 font-mono text-xs leading-4 text-muted-foreground';
+      const key = (label, keys) => `<li class="flex h-9 items-center justify-between type-small"><span>${label}</span><span class="flex items-center gap-1">${keys}</span></li>`;
+      const k = (text) => `<kbd class="${kbd}">${text}</kbd>`;
+      const then = '<span class="type-caption text-muted-foreground">then</span>';
+      const th = 'h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]';
+      const sort = 'ledger-sort inline-flex items-center rounded-xs type-overline transition-colors hover:text-foreground';
+      const row = 'h-9 border-b border-border last:border-b-0 transition-colors hover:bg-accent/40 data-selected:bg-primary/10';
+      const cell = 'px-2 whitespace-nowrap';
+      const invoices = [
+        ['INV-0912', 1240, '$1,240.00', 'Paid'],
+        ['INV-0911', 303, 'Rp 4.850.000', 'Due'],
+        ['INV-0910', 320, '$320.00', 'Overdue'],
+        ['INV-0909', 775, 'Rp 12.400.000', 'Paid'],
+        ['INV-0908', 2075.5, '$2,075.50', 'Draft'],
+        ['INV-0907', 61, 'Rp 980.000', 'Refunded'],
+        ['INV-0906', 640, '$640.00', 'Due'],
+        ['INV-0905', 134, 'Rp 2.150.000', 'Paid'],
+      ];
+      const tableRow = ([id, usd, amount, state]) =>
+        `<tr class="${row}"><td class="${cell}"><input type="checkbox" class="ledger-checkbox" aria-label="Select ${id}" /></td><td class="${cell} type-mono" data-sort="${id}">${id}</td><td class="${cell} type-mono text-right" data-sort="${usd}">${amount}</td><td class="${cell}">${status[state]}</td></tr>`;
+      const log = (time, level, tone, source, message) =>
+        `<span class="flex gap-3 whitespace-nowrap"><span class="text-muted-foreground">${time}</span><span class="w-10 ${tone}">${level}</span><span class="w-14 text-muted-foreground">${source}</span><span>${message}</span></span>`;
+      const kv = (label, value) => `<div class="flex h-8 items-center justify-between gap-4 type-small"><span class="text-muted-foreground">${label}</span><span class="type-mono">${value}</span></div>`;
+      const listRow = (label, value) =>
+        `<li class="flex h-9 items-center justify-between gap-4 px-3"><span class="type-small text-muted-foreground">${label}</span><span class="type-mono">${value}</span></li>`;
+      const pageButton =
+        'h-7 min-w-7 rounded-sm px-1.5 type-mono text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-foreground';
+      const tooltip =
+        'pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-max max-w-56 -translate-x-1/2 rounded-sm border border-border bg-popover px-2 py-1 type-caption text-popover-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 group-data-open:opacity-100';
+      const group = (label, content) => `<div class="flex flex-col gap-2"><span class="type-overline text-muted-foreground">${label}</span><div class="flex flex-wrap items-center gap-2">${content}</div></div>`;
+
+      // The first four are what the catalog cover shows. Panels take two rows unless marked short.
+      const components = [
+        {
+          name: 'Stat',
+          category: 'Data',
+          align: 'start',
+          html: `<div class="flex w-full flex-col"><div class="flex items-center justify-between"><span class="type-overline text-muted-foreground">Requests / s</span><span class="type-caption text-muted-foreground">Last 24 h</span></div><div class="mt-1 flex items-baseline gap-2"><span class="type-display">12,480</span><span class="inline-flex items-center gap-1 type-ui text-positive">${up}4.2%</span></div><svg class="mt-3 h-12 w-full text-chart-1" viewBox="0 0 240 48" preserveAspectRatio="none" aria-hidden="true"><path d="${rps.area}" fill="currentColor" fill-opacity="0.1"/><path d="${rps.line}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg><div class="mt-3 flex items-baseline justify-between border-t border-border pt-3"><span class="type-small text-muted-foreground">p95 latency</span><span class="inline-flex items-baseline gap-2"><span class="type-mono">212 ms</span><span class="inline-flex items-center gap-1 type-ui text-positive">${down}8 ms</span></span></div><div class="mt-2 flex items-baseline justify-between"><span class="type-small text-muted-foreground">Error rate</span><span class="inline-flex items-baseline gap-2"><span class="type-mono">0.42%</span><span class="inline-flex items-center gap-1 type-ui text-negative">${up}0.05 pt</span></span></div><div class="mt-2 flex items-baseline justify-between"><span class="type-small text-muted-foreground">MRR</span><span class="inline-flex items-baseline gap-2"><span class="type-mono">Rp 184.250.000</span><span class="inline-flex items-center gap-1 type-ui text-positive">${up}2.1%</span></span></div></div>`,
+        },
+        {
+          name: 'Data table',
+          category: 'Data',
+          align: 'start',
+          span: true,
+          stateful: true,
+          html: `<div class="w-full max-h-63 overflow-auto rounded-md border border-border"><table class="w-full border-collapse type-small"><thead class="sticky top-0 z-10 bg-muted"><tr><th scope="col" class="${th} w-9"><input type="checkbox" class="ledger-checkbox" aria-label="Select all invoices" /></th><th scope="col" aria-sort="none" class="${th}"><button type="button" class="${sort}">Invoice</button></th><th scope="col" aria-sort="none" class="${th} text-right"><button type="button" class="${sort}">Amount</button></th><th scope="col" class="${th}">Status</th></tr></thead><tbody>${invoices.map(tableRow).join('')}</tbody></table></div>`,
+        },
+        {
+          name: 'Button',
+          category: 'Input',
+          align: 'start',
+          html: `<div class="flex w-full flex-col gap-4">${group('Variants', `<button type="button" class="${primary}">Export CSV</button><button type="button" class="${secondary}">Filter</button><button type="button" class="${ghost}">Cancel</button><button type="button" class="${destructive}">Delete</button>`)}${group('Sizes and states', `<button type="button" class="${secondary} h-7 px-2.5">${icons.refresh}Refresh</button><button type="button" class="${primary}">${icons.plus}Create invoice</button><button type="button" class="${secondary} h-9 px-4">${icons.download}Download</button><button type="button" disabled class="${primary}"><span class="size-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden="true"></span>Saving</button><button type="button" disabled class="${secondary}">Disabled</button>`)}</div>`,
+        },
+        {
+          name: 'List',
+          category: 'Layout',
+          align: 'start',
+          html: `<ul class="w-full divide-y divide-border rounded-md border border-border">${listRow('Region', 'ap-southeast-1')}${listRow('Instances', '12')}${listRow('Uptime, 30 d', '99.98%')}${listRow('Last deploy', '09:12:04')}${listRow('Open invoices', '24')}${listRow('MRR', 'Rp 184.250.000')}</ul>`,
+        },
+        {
+          name: 'Code',
+          category: 'Text',
+          align: 'start',
+          span: true,
+          html: `<div class="w-full overflow-x-auto rounded-md border border-border bg-muted p-3 type-mono"><div class="flex flex-col gap-1">${log('09:12:04.118', 'INFO', 'text-info', 'deploy', 'api-gateway v2.14.0 → prod (8f3c1a2) 38 s')}${log('09:12:05.402', 'INFO', 'text-info', 'deploy', 'invoices-worker v1.9.3 → prod 41 s')}${log('09:12:08.930', 'INFO', 'text-info', 'billing', 'INV-0912 paid $1,240.00 by card in 1.2 s')}${log('09:12:09.877', 'WARN', 'text-warning', 'health', 'p95 412 ms for 3 min, budget 250 ms')}${log('09:12:10.013', 'ERROR', 'text-negative', 'billing', 'webhook retry 3/3 failed, INV-0898')}${log('09:12:12.561', 'INFO', 'text-info', 'cron', 'dunning done: 24 reminders sent, 0 failed')}</div></div><p class="mt-3 type-small text-muted-foreground">Inline code is the same face: run <code class="rounded-xs bg-muted px-1 py-0.5 type-mono">pnpm build</code> after changing <code class="rounded-xs bg-muted px-1 py-0.5 type-mono">ledger.css</code>.</p>`,
+        },
+        {
+          name: 'Chip',
+          category: 'Input',
+          short: true,
+          stateful: true,
+          html: `<div role="group" aria-label="Filter by status" class="flex flex-wrap justify-center gap-2"><button type="button" aria-pressed="true" class="${chip}">All<span class="${count}">128</span></button><button type="button" aria-pressed="false" class="${chip}">Paid<span class="${count}">96</span></button><button type="button" aria-pressed="false" class="${chip}">Due<span class="${count}">24</span></button><button type="button" aria-pressed="false" class="${chip}">Overdue<span class="${count}">8</span></button></div>`,
+        },
+        {
+          name: 'Segmented control',
+          category: 'Navigation',
+          short: true,
+          stateful: true,
+          html: `<div role="group" aria-label="Period" class="inline-flex h-8 items-center gap-0.5 rounded-sm border border-border bg-muted p-0.5"><button type="button" aria-pressed="false" class="${segment}">1h</button><button type="button" aria-pressed="true" class="${segment}">24h</button><button type="button" aria-pressed="false" class="${segment}">7d</button><button type="button" aria-pressed="false" class="${segment}">30d</button></div>`,
+        },
+        {
+          name: 'Toggle',
+          category: 'Input',
+          stateful: true,
+          align: 'start',
+          html: `<div class="flex w-full flex-col divide-y divide-border">${toggleRow('Live updates', true)}${toggleRow('Alert on error budget', true, '· 80%')}${toggleRow('Pause alerts during deploys', true)}${toggleRow('Include test invoices', false)}${toggleRow('Weekly digest', false, '· Monday')}</div>`,
+        },
+        {
+          name: 'Slider',
+          category: 'Input',
+          stateful: true,
+          align: 'start',
+          html: `<div class="flex w-full flex-col gap-6">${slider('sampling', 'Sampling rate', 50, 0, 100, '%', 'Share of requests that are traced. Lower it when ingest cost climbs.')}${slider('retention', 'Log retention', 30, 7, 90, ' d', 'Days of logs kept hot. Older entries move to cold storage.')}</div>`,
+        },
+        {
+          name: 'Icon button',
+          category: 'Input',
+          short: true,
+          stateful: true,
+          html: `<div class="flex items-center gap-1"><button type="button" aria-label="Copy invoice number" class="${iconButton}">${icons.copy}</button><button type="button" aria-label="Refresh" class="${iconButton}">${icons.refresh}</button><button type="button" aria-label="Download" class="${iconButton}">${icons.download}</button><button type="button" aria-label="Pin panel" aria-pressed="true" data-toggle class="${iconButton}">${icons.pin}</button><button type="button" aria-label="More actions" class="${iconButton}">${icons.more}</button><button type="button" aria-label="Filters" disabled class="${iconButton}">${icons.filter}</button></div>`,
+        },
+        {
+          name: 'Badge',
+          category: 'Status',
+          short: true,
+          html: `<div class="flex flex-wrap items-center justify-center gap-2"><span class="${badge}">128</span><span class="${badge} font-mono">v2.14.0</span><span class="${badge}">prod</span><span class="${badge} border-primary/40 text-primary">Beta</span><span class="${badge} text-muted-foreground">Archived</span></div>`,
+        },
+        {
+          name: 'Single selection',
+          category: 'Input',
+          stateful: true,
+          align: 'start',
+          html: `<fieldset class="w-full"><legend class="type-ui">Latency percentile</legend><div class="mt-2 flex flex-col">${option('percentile', 'p50', 'p50', 'median')}${option('percentile', 'p95', 'p95', 'default for alerts', true)}${option('percentile', 'p99', 'p99')}${option('percentile', 'p999', 'p99.9', 'noisy below 1,000 req/s')}</div><p class="mt-3 type-caption text-muted-foreground">Used by the latency panel and by alert rules.</p></fieldset>`,
+        },
+        {
+          name: 'Checkbox',
+          category: 'Input',
+          stateful: true,
+          align: 'start',
+          html: `<fieldset class="w-full"><legend class="type-ui">Columns</legend><div class="mt-2 flex flex-col">${check('Invoice', 'checked')}${check('Customer', 'checked')}${check('Amount', '', 'IDR and USD')}${check('Status', 'mixed', '2 of 5 states')}${check('Region')}</div></fieldset>`,
+        },
+        {
+          name: 'Status pill',
+          category: 'Status',
+          short: true,
+          html: `<div class="flex flex-wrap items-center justify-center gap-2">${status.Paid}${status.Due}${status.Overdue}${status.Draft}${status.Refunded}</div>`,
+        },
+        {
+          name: 'Spinner',
+          category: 'Status',
+          short: true,
+          html: `<div class="flex items-center gap-2.5"><span role="status" aria-label="Loading" class="size-4 animate-spin rounded-full border-2 border-secondary border-t-primary"></span><span class="type-small text-muted-foreground">Loading <span class="type-mono">1,284</span> rows</span></div>`,
+        },
+        {
+          name: 'Text field',
+          category: 'Input',
+          stateful: true,
+          align: 'start',
+          html: `<div class="flex w-full flex-col gap-4"><label class="block w-full"><span class="type-ui">Alert threshold</span><span class="relative mt-1.5 block"><input type="text" inputmode="decimal" value="250" class="${field} pr-10 type-mono text-right" /><span class="pointer-events-none absolute inset-y-0 right-3 flex items-center type-small text-muted-foreground">ms</span></span><span class="mt-1.5 block type-caption text-muted-foreground">p95 latency above this pages the on-call engineer.</span></label><label class="block w-full"><span class="type-ui">Webhook URL</span><input type="url" value="http://hooks.example" aria-invalid="true" aria-describedby="webhook-error" class="${field} mt-1.5 border-negative type-mono" /><span id="webhook-error" class="mt-1.5 block type-caption text-negative">Use https: the endpoint must be encrypted.</span></label></div>`,
+        },
+        {
+          name: 'Tabs',
+          category: 'Navigation',
+          stateful: true,
+          align: 'start',
+          html: `<div class="w-full"><div role="tablist" aria-label="Sections" class="flex w-full gap-2 overflow-x-auto border-b border-border"><button type="button" role="tab" id="tab-overview" aria-selected="true" aria-controls="panel-overview" class="${tab}">Overview</button><button type="button" role="tab" id="tab-invoices" aria-selected="false" aria-controls="panel-invoices" tabindex="-1" class="${tab}">Invoices<span class="${badge}">128</span></button><button type="button" role="tab" id="tab-logs" aria-selected="false" aria-controls="panel-logs" tabindex="-1" class="${tab}">Logs</button><button type="button" role="tab" id="tab-alerts" aria-selected="false" aria-controls="panel-alerts" tabindex="-1" class="${tab}">Alerts</button></div><div role="tabpanel" id="panel-overview" aria-labelledby="tab-overview" class="pt-2">${kv('Requests / s', '12,480')}${kv('p95 latency', '212 ms')}${kv('Error rate', '0.42%')}</div><div role="tabpanel" id="panel-invoices" aria-labelledby="tab-invoices" hidden class="pt-2">${kv('Open', '24')}${kv('Overdue', '8')}${kv('Collected this month', 'Rp 184.250.000')}</div><div role="tabpanel" id="panel-logs" aria-labelledby="tab-logs" hidden class="pt-2">${kv('Entries since 09:00', '1,284')}${kv('Warnings', '3')}${kv('Errors', '1')}</div><div role="tabpanel" id="panel-alerts" aria-labelledby="tab-alerts" hidden class="pt-2">${kv('Firing', '1')}${kv('Error budget used', '92%')}${kv('On call', 'rifkii')}</div></div>`,
+        },
+        {
+          name: 'Pagination',
+          category: 'Navigation',
+          short: true,
+          stateful: true,
+          html: `<nav aria-label="Pagination" class="flex w-full flex-wrap items-center justify-between gap-3"><span class="type-small text-muted-foreground"><span class="type-mono text-foreground">1–50</span> of <span class="type-mono text-foreground">1,284</span></span><div class="flex items-center gap-0.5"><button type="button" aria-label="Previous page" disabled class="${iconButtonSmall}">${icons.chevronLeft}</button><button type="button" aria-current="page" class="${pageButton}">1</button><button type="button" class="${pageButton}">2</button><button type="button" class="${pageButton}">3</button><span class="px-1 type-mono text-muted-foreground" aria-hidden="true">…</span><button type="button" class="${pageButton}">26</button><button type="button" aria-label="Next page" class="${iconButtonSmall}">${icons.chevronRight}</button></div></nav>`,
+        },
+        {
+          name: 'Tooltip',
+          category: 'Status',
+          short: true,
+          html: `<div class="flex items-center gap-6 pt-6"><span class="group relative inline-flex" data-open><button type="button" aria-describedby="tip-p95" class="${secondary} h-7 px-2.5">p95${icons.help}</button><span role="tooltip" id="tip-p95" class="${tooltip}">95th percentile of request latency</span></span><span class="group relative inline-flex"><button type="button" aria-label="What is the error budget?" aria-describedby="tip-budget" class="${iconButton}">${icons.help}</button><span role="tooltip" id="tip-budget" class="${tooltip}">Failed requests the SLO still allows this month</span></span></div>`,
+        },
+        {
+          name: 'Progress',
+          category: 'Data',
+          align: 'start',
+          html: `<div class="flex w-full flex-col gap-5"><div class="w-full"><div class="flex items-baseline justify-between"><span class="type-ui">Storage</span><span class="type-mono text-muted-foreground">64%</span></div><div role="progressbar" aria-label="Storage" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100" class="mt-2 h-1 w-full overflow-hidden rounded-xs bg-secondary"><div class="h-full w-[64%] rounded-xs bg-primary"></div></div></div><div class="w-full"><div class="flex items-baseline justify-between"><span class="type-ui">Error budget <span class="font-normal text-muted-foreground">this month</span></span><span class="type-mono text-warning">92% used</span></div><div role="progressbar" aria-label="Error budget" aria-valuenow="92" aria-valuemin="0" aria-valuemax="100" class="mt-2 h-1 w-full overflow-hidden rounded-xs bg-secondary"><div class="h-full w-[92%] rounded-xs bg-warning"></div></div></div><div class="w-full"><div class="flex items-baseline justify-between"><span class="type-ui">API quota <span class="font-normal text-muted-foreground">per day</span></span><span class="type-mono text-muted-foreground">26%</span></div><div role="progressbar" aria-label="API quota" aria-valuenow="26" aria-valuemin="0" aria-valuemax="100" class="mt-2 h-1 w-full overflow-hidden rounded-xs bg-secondary"><div class="h-full w-[26%] rounded-xs bg-primary"></div></div></div></div>`,
+        },
+        {
+          name: 'Card',
+          category: 'Layout',
+          align: 'start',
+          html: `<article class="flex w-full flex-col rounded-lg border border-border bg-card"><header class="flex h-10 items-center justify-between border-b border-border pr-2 pl-4"><h3 class="type-title">Error budget</h3><button type="button" aria-label="More actions" class="${iconButton}">${icons.more}</button></header><div class="flex flex-col gap-1 p-4"><span class="type-overline text-muted-foreground">Remaining</span><span class="type-display">8.0%</span><span class="type-caption text-muted-foreground">Resets 1 Nov · burn rate 1.4× over the last 6 h</span></div><footer class="flex h-10 items-center justify-between border-t border-border px-4"><span class="type-caption text-muted-foreground">Updated 09:12:04</span><button type="button" class="${ghost} h-7 px-2">Open SLO</button></footer></article>`,
+        },
+        {
+          name: 'Toolbar',
+          category: 'Input',
+          align: 'start',
+          span: true,
+          stateful: true,
+          html: `<div class="flex w-full flex-col gap-3"><div role="toolbar" aria-label="Invoices" class="flex w-full flex-wrap items-center gap-2"><label class="relative min-w-40 flex-1"><span class="sr-only">Search invoices</span><span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-muted-foreground">${icons.search}</span><input type="search" placeholder="Search invoices, customers, IDs" class="${field} pl-8" /></label><div role="group" aria-label="Filters" class="flex gap-2"><button type="button" aria-pressed="true" class="${chip}">Status<span class="${count}">Due</span>${icons.chevronDown}</button><button type="button" aria-pressed="false" class="${chip}">Period${icons.chevronDown}</button></div><button type="button" class="${secondary}">${icons.download}Export</button></div><ul class="w-full divide-y divide-border rounded-md border border-border"><li class="flex h-9 items-center gap-3 px-3 type-small"><span class="type-mono">INV-0911</span><span class="flex-1 truncate">Rumah Batik Laweyan</span><span class="type-mono">Rp 4.850.000</span>${status.Due}</li><li class="flex h-9 items-center gap-3 px-3 type-small"><span class="type-mono">INV-0906</span><span class="flex-1 truncate">Toko Buku Pelangi</span><span class="type-mono">$640.00</span>${status.Due}</li><li class="flex h-9 items-center gap-3 px-3 type-small"><span class="type-mono">INV-0896</span><span class="flex-1 truncate">Klinik Sehat Bersama</span><span class="type-mono">Rp 2.150.000</span>${status.Due}</li></ul><p class="type-caption text-muted-foreground"><span class="type-mono">24</span> invoices match · sorted by due date</p></div>`,
+        },
+        {
+          name: 'Keyboard key',
+          category: 'Text',
+          align: 'start',
+          html: `<ul class="w-full divide-y divide-border">${key('Search', k('⌘') + k('K'))}${key('Go to invoices', k('G') + then + k('I'))}${key('Go to logs', k('G') + then + k('L'))}${key('Select row', k('Space'))}${key('Toggle theme', k('⇧') + k('D'))}${key('Previous period', k('[') )}${key('All shortcuts', k('?'))}</ul>`,
+        },
+      ];
+
+      const categories = ['Input', 'Data', 'Navigation', 'Status', 'Layout', 'Text'];
+      const gallery = document.getElementById('gallery');
+      const filters = document.getElementById('filters');
+      const theme = document.getElementById('theme');
+
+      const syncDemo = (root) => {
+        root.querySelectorAll('input[type=range]').forEach((el) => {
+          el.style.setProperty('--slider-fill', `${((el.value - el.min) / (el.max - el.min)) * 100}%`);
+          const out = root.querySelector(`output[for="${el.id}"]`);
+          if (out) out.textContent = `${el.value}${out.dataset.unit ?? ''}`;
+        });
+        root.querySelectorAll('input[data-indeterminate]').forEach((el) => (el.indeterminate = true));
+      };
+
+      theme.innerHTML = icons.theme;
+      const tally = (name) => (name === 'All' ? components.length : components.filter((c) => c.category === name).length);
+      filters.innerHTML = ['All', ...categories]
+        .map((name, i) => `<button type="button" aria-pressed="${i === 0}" class="${chip}">${name}<span class="${count}">${tally(name)}</span></button>`)
+        .join('');
+      gallery.innerHTML = components
+        .map(
+          (c, i) => `<article data-index="${i}" data-category="${c.category}" class="flex flex-col rounded-lg border border-border bg-card ${c.short ? 'row-span-1' : 'row-span-2'}${c.span ? ' sm:col-span-2' : ''}">
+            <header class="flex h-10 shrink-0 items-center justify-between border-b border-border pr-2 pl-4">
+              <h2 class="type-title">${c.name}</h2>
+              <div class="flex gap-0.5">
+                ${c.stateful ? `<button type="button" data-reset aria-label="Reset ${c.name}" class="${iconButton}">${icons.reset}</button>` : ''}
+                <button type="button" data-copy aria-label="Copy ${c.name} markup" class="${iconButton}">${icons.copy}</button>
+              </div>
+            </header>
+            <div data-demo class="flex min-h-0 flex-1 overflow-hidden p-4 ${c.align === 'start' ? 'flex-col items-start' : 'items-center justify-center'}">${c.html}</div>
+          </article>`,
+        )
+        .join('');
+      syncDemo(gallery);
+
+      theme.addEventListener('click', () => document.documentElement.classList.toggle('dark'));
+
+      filters.addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        const name = button.firstChild.textContent;
+        for (const b of filters.children) b.setAttribute('aria-pressed', b === button);
+        for (const card of gallery.children) card.hidden = name !== 'All' && card.dataset.category !== name;
+      });
+
+      gallery.addEventListener('input', (event) => syncDemo(event.target.closest('[data-demo]')));
+
+      // Row selection: a row's checkbox marks the row; the header checkbox marks all, and shows a dash for some.
+      gallery.addEventListener('change', (event) => {
+        const box = event.target;
+        if (box.type !== 'checkbox' || !box.closest('table')) return;
+        const table = box.closest('table');
+        const all = table.querySelector('thead input[type=checkbox]');
+        const rows = [...table.querySelectorAll('tbody tr')];
+        if (box === all) {
+          for (const tr of rows) {
+            tr.querySelector('input[type=checkbox]').checked = all.checked;
+            tr.toggleAttribute('data-selected', all.checked);
+          }
+          all.indeterminate = false;
+          return;
+        }
+        box.closest('tr').toggleAttribute('data-selected', box.checked);
+        const checked = rows.filter((tr) => tr.querySelector('input[type=checkbox]').checked).length;
+        all.checked = checked === rows.length;
+        all.indeterminate = checked > 0 && checked < rows.length;
+      });
+
+      // Tabs: the pointer or the arrow keys select one; its panel shows, the others hide.
+      const selectTab = (selected) => {
+        const demo = selected.closest('[data-demo]');
+        for (const t of selected.parentElement.querySelectorAll('[role=tab]')) {
+          t.setAttribute('aria-selected', t === selected);
+          t.tabIndex = t === selected ? 0 : -1;
+        }
+        for (const panel of demo.querySelectorAll('[role=tabpanel]')) panel.hidden = panel.id !== selected.getAttribute('aria-controls');
+      };
+      gallery.addEventListener('keydown', (event) => {
+        const current = event.target.closest('[role=tab]');
+        if (!current || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        const tabs = [...current.parentElement.querySelectorAll('[role=tab]')];
+        const index = tabs.indexOf(current);
+        const next =
+          event.key === 'Home' ? tabs[0] : event.key === 'End' ? tabs[tabs.length - 1] : tabs[(index + (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        event.preventDefault();
+        selectTab(next);
+        next.focus();
+      });
+
+      gallery.addEventListener('click', async (event) => {
+        const card = event.target.closest('article[data-index]');
+        if (!card) return;
+        const component = components[card.dataset.index];
+        const toggle = event.target.closest('[role=switch]');
+        const tabButton = event.target.closest('[role=tab]');
+        const pressed = event.target.closest('[aria-pressed]');
+        const page = event.target.closest('nav[aria-label=Pagination] button');
+        const sortButton = event.target.closest('.ledger-sort');
+        const copy = event.target.closest('[data-copy]');
+        if (toggle) toggle.setAttribute('aria-checked', toggle.getAttribute('aria-checked') !== 'true');
+        if (tabButton) selectTab(tabButton);
+        if (pressed && !pressed.closest('header')) {
+          // A chip or a segment selects one of its group; a toggle icon button simply flips.
+          if (pressed.dataset.toggle !== undefined) pressed.setAttribute('aria-pressed', pressed.getAttribute('aria-pressed') !== 'true');
+          else for (const b of pressed.parentElement.querySelectorAll(':scope > [aria-pressed]')) b.setAttribute('aria-pressed', b === pressed);
+        }
+        if (page) {
+          const nav = page.closest('nav');
+          const pages = [...nav.querySelectorAll('button:not([aria-label])')];
+          const prev = nav.querySelector('[aria-label="Previous page"]');
+          const next = nav.querySelector('[aria-label="Next page"]');
+          let index = pages.findIndex((b) => b.getAttribute('aria-current') === 'page');
+          if (page === prev) index = Math.max(0, index - 1);
+          else if (page === next) index = Math.min(pages.length - 1, index + 1);
+          else index = pages.indexOf(page);
+          pages.forEach((b, i) => (i === index ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current')));
+          prev.disabled = index === 0;
+          next.disabled = index === pages.length - 1;
+          const from = index === pages.length - 1 ? 1251 : index * 50 + 1;
+          nav.querySelector('.type-mono').textContent = `${from.toLocaleString('en-US')}–${Math.min(from + 49, 1284).toLocaleString('en-US')}`;
+        }
+        if (sortButton) {
+          const header = sortButton.closest('th');
+          const direction = header.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+          for (const h of header.parentElement.querySelectorAll('[aria-sort]')) h.setAttribute('aria-sort', 'none');
+          header.setAttribute('aria-sort', direction);
+          const column = [...header.parentElement.children].indexOf(header);
+          const body = header.closest('table').tBodies[0];
+          const key = (tr) => {
+            const value = tr.children[column].dataset.sort;
+            return Number.isNaN(Number(value)) ? value : Number(value);
+          };
+          [...body.rows]
+            .sort((a, b) => (key(a) > key(b) ? 1 : key(a) < key(b) ? -1 : 0) * (direction === 'ascending' ? 1 : -1))
+            .forEach((tr) => body.append(tr));
+        }
+        if (event.target.closest('[data-reset]')) {
+          const demo = card.querySelector('[data-demo]');
+          demo.innerHTML = component.html;
+          syncDemo(demo);
+        }
+        if (copy) {
+          try {
+            await navigator.clipboard.writeText(component.html);
+            copy.innerHTML = icons.check;
+            setTimeout(() => (copy.innerHTML = icons.copy), 1200);
+          } catch {
+            // Over file:// there is no clipboard; the button simply stays as it is.
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

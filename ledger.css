@@ -1,0 +1,425 @@
+/*
+ * Ledger: a dense, dark-first theme for Tailwind CSS v4, for data-heavy product
+ * interfaces. Quiet graphite chrome, hairline borders, one violet for actions and
+ * focus, a separate data palette for charts and deltas, tabular figures on every
+ * number, everything on a 4px grid.
+ *
+ *   @import "tailwindcss";
+ *   @import "./ledger.css";
+ *
+ * Token names follow shadcn/ui, so shadcn components pick the theme up as is.
+ * The rules behind the values are in DESIGN.md.
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f3f4f6;
+  --foreground: #12151b;
+  --card: #ffffff;
+  --card-foreground: #12151b;
+  --popover: #ffffff;
+  --popover-foreground: #12151b;
+  --primary: #6246ea;
+  --primary-hover: #5236d6;
+  --primary-foreground: #ffffff;
+  --secondary: #e9ebef;
+  --secondary-foreground: #12151b;
+  --muted: #f3f4f6;
+  --muted-foreground: #5b6472;
+  --accent: #e1e4ea;
+  --accent-foreground: #12151b;
+  --destructive: #cf2e2e;
+  --destructive-foreground: #ffffff;
+  --success: #1b7f4e;
+  --success-foreground: #ffffff;
+  --warning: #b45309;
+  --info: #0e7490;
+  --positive: #1b7f4e;
+  --negative: #cf2e2e;
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --border: #e1e4ea;
+  --input: #848d9c;
+  --ring: #6246ea;
+  --radius: 0.375rem;
+  --shadow-lg: 0 8px 24px -8px #12151b33, 0 0 0 1px #12151b14;
+}
+
+.dark {
+  --background: #0b0d12;
+  --foreground: #e9ebef;
+  --card: #12151b;
+  --card-foreground: #e9ebef;
+  --popover: #1e232c;
+  --popover-foreground: #e9ebef;
+  --primary: #7f56f0;
+  --primary-hover: #6e45e0;
+  --primary-foreground: #ffffff;
+  --secondary: #1e232c;
+  --secondary-foreground: #e9ebef;
+  --muted: #171b22;
+  --muted-foreground: #848d9c;
+  --accent: #262c37;
+  --accent-foreground: #e9ebef;
+  --destructive: #d63b40;
+  --destructive-foreground: #ffffff;
+  --success: #34c27a;
+  --success-foreground: #0b0d12;
+  --warning: #e8a33d;
+  --info: #38bdf8;
+  --positive: #34c27a;
+  --negative: #f4726b;
+  --chart-1: #3987e5;
+  --chart-2: #e06a2e;
+  --chart-3: #2ba878;
+  --chart-4: #b48c0f;
+  --chart-5: #d45c8e;
+  --border: #232931;
+  --input: #5b6472;
+  --ring: #7f56f0;
+  --shadow-lg: 0 8px 24px -8px #000000a6, 0 0 0 1px #00000080;
+}
+
+@theme {
+  /* The default Tailwind palette is removed on purpose: cool grays, one violet, and the data colors. */
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray-50: #f3f4f6;
+  --color-gray-100: #e9ebef;
+  --color-gray-200: #e1e4ea;
+  --color-gray-300: #c3c9d3;
+  --color-gray-400: #848d9c;
+  --color-gray-500: #5b6472;
+  --color-gray-600: #3a4150;
+  --color-gray-700: #262c37;
+  --color-gray-750: #232931;
+  --color-gray-800: #1e232c;
+  --color-gray-850: #171b22;
+  --color-gray-900: #12151b;
+  --color-gray-950: #0b0d12;
+  --color-violet-400: #7f56f0;
+  --color-violet-500: #6e45e0;
+  --color-violet-600: #6246ea;
+  --color-violet-700: #5236d6;
+  --color-red-400: #f4726b;
+  --color-red-500: #d63b40;
+  --color-red-600: #cf2e2e;
+  --color-green-400: #34c27a;
+  --color-green-600: #1b7f4e;
+  --color-amber-400: #e8a33d;
+  --color-amber-600: #b45309;
+  --color-cyan-400: #38bdf8;
+  --color-cyan-600: #0e7490;
+  --color-blue-400: #3987e5;
+  --color-blue-500: #2a78d6;
+  --color-orange-400: #e06a2e;
+  --color-orange-500: #eb6834;
+  --color-teal-400: #2ba878;
+  --color-teal-500: #199e70;
+  --color-gold-400: #b48c0f;
+  --color-gold-500: #c98500;
+  --color-magenta-400: #d45c8e;
+  --color-magenta-500: #d55181;
+
+  /* Both families have to be loaded by the app (next/font, @fontsource or a link tag). */
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --default-transition-duration: 120ms;
+  --default-transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Small radii: controls 4px (rounded-sm), panels 6px (rounded-md), cards 8px (rounded-lg). */
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 2px);
+  --radius-2xl: calc(var(--radius) + 6px);
+  --radius-3xl: calc(var(--radius) + 10px);
+  --radius-4xl: calc(var(--radius) + 18px);
+
+  /* The only shadow: floating menus and tooltips. Panels and cards have none. */
+  --shadow-lg: var(--shadow-lg);
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    /* Every number in Ledger lines up: tabular figures everywhere, not per element. */
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+  }
+
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+}
+
+/*
+ * Type styles. Each one sets size, line height, tracking and weight together.
+ * They are named type-* instead of text-* so tailwind-merge never mistakes
+ * them for a text color. Nothing is below 12px.
+ */
+
+/* KPI values and the wordmark: the one large style, set in the mono face. */
+@utility type-display {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  line-height: 2.5rem;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+@utility type-h1 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+@utility type-h2 {
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  letter-spacing: -0.01em;
+  font-weight: 500;
+}
+
+@utility type-h3 {
+  font-size: 1rem;
+  line-height: 1.5rem;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+/* Panel and dialog titles. */
+@utility type-title {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+@utility type-body {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+/* The workhorse for interface text: buttons, chips, tabs, labels, table cells. */
+@utility type-ui {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+@utility type-small {
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+@utility type-caption {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+/* Table headers and section labels: uppercase, tracked, never below 12px. */
+@utility type-overline {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* IDs, code, log lines, keyboard keys. */
+@utility type-mono {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+/*
+ * Native range input: a 4px track and a 16px square thumb with the control
+ * radius. Chrome and Safari cannot paint the filled part on their own, so set
+ * --slider-fill to the value in percent whenever the input changes.
+ */
+@utility ledger-slider {
+  appearance: none;
+  width: 100%;
+  height: 1rem;
+  background: transparent;
+  cursor: pointer;
+
+  &::-webkit-slider-runnable-track {
+    height: 0.25rem;
+    border-radius: 2px;
+    background: linear-gradient(
+      to right,
+      var(--primary) var(--slider-fill, 50%),
+      var(--secondary) var(--slider-fill, 50%)
+    );
+  }
+
+  &::-moz-range-track {
+    height: 0.25rem;
+    border-radius: 2px;
+    background: var(--secondary);
+  }
+
+  &::-moz-range-progress {
+    height: 0.25rem;
+    border-radius: 2px;
+    background: var(--primary);
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    margin-top: -0.375rem;
+    border-radius: calc(var(--radius) - 2px);
+    background: var(--primary);
+    border: 2px solid var(--card);
+  }
+
+  &::-moz-range-thumb {
+    width: 1rem;
+    height: 1rem;
+    border-radius: calc(var(--radius) - 2px);
+    background: var(--primary);
+    border: 2px solid var(--card);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+/*
+ * Native checkbox: a 16px square with the control radius. Checked paints the
+ * primary fill with a white check; :indeterminate paints a dash.
+ */
+@utility ledger-checkbox {
+  appearance: none;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--input);
+  background-color: var(--card);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 0.75rem;
+  cursor: pointer;
+  transition-property: background-color, border-color;
+  transition-duration: var(--default-transition-duration);
+
+  &:checked,
+  &:indeterminate {
+    border-color: var(--primary);
+    background-color: var(--primary);
+  }
+
+  &:checked {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");
+  }
+
+  &:indeterminate {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M5 12h14'/%3E%3C/svg%3E");
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+/* Table headers that sort: the arrow shows the direction, the button is the whole header cell. */
+@utility ledger-sort {
+  &::after {
+    content: "";
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-left: 0.25rem;
+    vertical-align: -0.0625rem;
+    background-color: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 15 5 5 5-5'/%3E%3Cpath d='m7 9 5-5 5 5'/%3E%3C/svg%3E") center / contain no-repeat;
+    opacity: 0.5;
+  }
+
+  [aria-sort="ascending"] > &::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 12 7-7 7 7'/%3E%3Cpath d='M12 19V5'/%3E%3C/svg%3E");
+    opacity: 1;
+  }
+
+  [aria-sort="descending"] > &::after {
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14'/%3E%3Cpath d='m19 12-7 7-7-7'/%3E%3C/svg%3E");
+    opacity: 1;
+  }
+}
