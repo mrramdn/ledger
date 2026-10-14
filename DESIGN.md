@@ -374,9 +374,10 @@ Rules:
 - Spacing uses the 4px grid. Common steps: 4 (between icon and label), 8 (inside a control, between chips), 12 (compact panel padding), 16 (panel padding, grid gaps), 24 and 32 (between sections).
 - Heights: controls 28 (small), 32 (default) and 36 (large); table and list rows 36 (32 compact); panel header 40; badges, pills and keyboard keys 20; icons 16.
 - The page is `bg-background`. Content lives in panels (`bg-card` with a hairline border); only a page title or a filter row sits loose on the page.
-- A dashboard is a grid with `gap-4 p-4`: one column on phones, two from 640px, three from 1024px, four from 1280px. Rows are a 10rem unit (`auto-rows-[10rem]`), a data panel takes two rows, a panel for a small control takes one, and wide panels (tables, logs, toolbars) span two columns from 640px. `grid-flow-dense` fills the gaps.
-- A panel has a 40px header row (title left, quiet icon buttons right) over a body with 16px padding. Tables and logs sit in their own bordered, scrolling container inside the body.
-- The top bar is a 40px `bg-card` strip with a bottom hairline: the wordmark on the left, context (environment, region, time) in `type-mono` and the theme switch on the right. Filters are a row of chips below it.
+- A dashboard is a grid with `gap-4`: one column on phones, more from 640px. KPI stats sit in one row, wide panels (charts, tables, logs) span columns, and every panel takes the height of its content: no fixed heights, no heights tied to the window, and no panel that scrolls vertically. A long table shows a page of rows with pagination.
+- A panel has a 40px header row (title left, quiet icon buttons right) over a body with 16px padding. Tables and logs sit in their own bordered container inside the body and scroll sideways only.
+- An app shell puts a 224px sidebar of ghost buttons (icon and label, the current page with `aria-current="page"` and the `accent` fill) left of the content from 1024px; below that the nav becomes a row above it.
+- The top bar is a 40px `bg-card` strip with a bottom hairline: the wordmark on the left, context (environment, version, time) in `type-mono` and the theme switch on the right. Filters are a row of chips below it.
 - Text aligns left; numbers align right. A key-value row puts the label in `muted-foreground` on the left and the mono value on the right.
 
 ## Elevation & Depth
@@ -405,31 +406,45 @@ Icons are Lucide at 16px (`size-4`) with a 1.75 stroke in `currentColor`. Icon-o
 
 ## Components
 
-Copy these recipes. The live versions, with the same classes, are in `preview/index.html`.
+Copy these recipes. The live versions, with the same classes and the same placeholder content, are in `preview/index.html`, one card per recipe. `preview/demo.html` is an example screen, a billing and operations dashboard, built only from these recipes and layout utilities.
 
 ### Button
 
 32px, 4px radius, 13px medium text. One primary button per view; a destructive button only for actions that delete or cannot be undone.
 
 ```html
-<button type="button" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 bg-primary text-primary-foreground hover:bg-primary-hover">Export CSV</button>
+<button type="button" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 bg-primary text-primary-foreground hover:bg-primary-hover">Save</button>
 ```
 
 - Secondary: replace the color classes with `border border-input bg-card text-foreground hover:bg-accent`.
 - Ghost: `text-muted-foreground hover:bg-accent hover:text-foreground`.
 - Destructive: `bg-destructive text-destructive-foreground hover:bg-destructive/90`.
-- Small (28px): `h-7 px-2.5`. Large (36px): `h-9 px-4`. Text stays 13px.
-- An icon goes before the label at 16px with the 6px gap the class already sets. A busy button is `disabled` with a 14px spinner (`size-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white`) in place of the icon.
+- The gallery labels them by job: Save (primary), Continue (secondary), Cancel (ghost), Delete (destructive).
+- An icon goes before the label at 16px with the 6px gap the class already sets.
+
+### Button sizes
+
+Three heights with the same 13px text, and two states. Small is for table rows, toolbars and card footers; large for a form's one submit button.
+
+```html
+<button type="button" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 border border-input bg-card text-foreground hover:bg-accent h-7 px-2.5">Small</button>
+<button type="button" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 border border-input bg-card text-foreground hover:bg-accent">Default</button>
+<button type="button" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 border border-input bg-card text-foreground hover:bg-accent h-9 px-4">Large</button>
+<button type="button" disabled class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 bg-primary text-primary-foreground hover:bg-primary-hover"><span class="size-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" aria-hidden="true"></span>Saving</button>
+```
+
+- Small (28px): `h-7 px-2.5`. Large (36px): `h-9 px-4`. Nothing is smaller than 28px.
+- Disabled is the native `disabled` attribute at 40% opacity. A busy button is `disabled` with a 14px spinner in place of the icon and a verb in the -ing form (Saving, Sending).
 
 ### Icon button
 
 32px square hit area around a 16px icon. A toggle icon button carries `aria-pressed`.
 
 ```html
-<button type="button" aria-label="Copy invoice number" class="inline-flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40"><!-- 16px Lucide icon --></button>
+<button type="button" aria-label="Copy" class="inline-flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40"><!-- 16px Lucide icon --></button>
 ```
 
-Small (28px) in table rows and pagination: `size-7`.
+Small (28px) in table rows and pagination: `size-7`. A pressed toggle icon button has the `accent` fill; a disabled one is at 40% opacity.
 
 ### Chip
 
@@ -439,14 +454,14 @@ Small (28px) in table rows and pagination: `size-7`.
 <button type="button" aria-pressed="true" class="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-sm border border-border bg-card px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-foreground">All<span class="type-mono text-xs">128</span></button>
 ```
 
-A chip that opens a menu ends with a 14px chevron-down icon.
+A chip that opens a menu ends with a 14px chevron-down icon and, when a value is set, shows it in mono (`Status Active`); it toggles its own `aria-pressed` instead of joining a group.
 
 ### Toggle
 
-36 by 20px switch with the control radius, not a pill. Flip `aria-checked` on click; label it with visible text in a 36px row.
+36 by 20px switch with the control radius, not a pill. Flip `aria-checked` on click; label it with visible text in a 36px row. A disabled switch gets `disabled`, and its label `opacity-40`.
 
 ```html
-<div class="flex h-9 w-full items-center justify-between gap-4"><span class="type-small">Live updates</span><button type="button" role="switch" aria-checked="true" aria-label="Live updates" class="group relative h-5 w-9 shrink-0 rounded-sm bg-input transition-colors aria-checked:bg-primary disabled:opacity-40"><span class="absolute top-0.5 left-0.5 size-4 rounded-xs bg-white transition-transform group-aria-checked:translate-x-4"></span></button></div>
+<div class="flex h-9 w-full items-center justify-between gap-4"><span class="type-small">Notifications</span><button type="button" role="switch" aria-checked="true" aria-label="Notifications" class="group relative h-5 w-9 shrink-0 rounded-sm bg-input transition-colors aria-checked:bg-primary disabled:opacity-40"><span class="absolute top-0.5 left-0.5 size-4 rounded-xs bg-white transition-transform group-aria-checked:translate-x-4"></span></button></div>
 ```
 
 ### Slider
@@ -454,7 +469,7 @@ A chip that opens a menu ends with a 14px chevron-down icon.
 A native range input with the `ledger-slider` utility: a 4px track and a 16px square thumb. The label and the mono readout share a row above. Chrome and Safari need `--slider-fill` to paint the filled part, so update it, and the `output`, on every `input` event.
 
 ```html
-<div class="w-full"><div class="flex items-baseline justify-between"><label for="sampling" class="type-ui">Sampling rate</label><output for="sampling" class="type-mono text-muted-foreground" data-unit="%">50%</output></div><input id="sampling" type="range" min="0" max="100" value="50" class="ledger-slider mt-2" /><p class="mt-2 type-caption text-muted-foreground">Share of requests that are traced. Lower it when ingest cost climbs.</p></div>
+<div class="w-full"><div class="flex items-baseline justify-between"><label for="value" class="type-ui">Value</label><output for="value" class="type-mono text-muted-foreground" data-unit="%">50%</output></div><input id="value" type="range" min="0" max="100" value="50" class="ledger-slider mt-2" /><p class="mt-2 type-caption text-muted-foreground">Supporting text that explains the setting.</p></div>
 ```
 
 ```js
@@ -464,47 +479,54 @@ output.textContent = `${el.value}${output.dataset.unit}`;
 
 ### Single selection (radio)
 
-Native radios in a `fieldset` with a `legend`, one per 32px row. The checked state is a 5px primary ring around a card-colored center.
+Native radios in a `fieldset` with a `legend`, one per 32px row. The checked state is a 5px primary ring around a card-colored center. A disabled option has `disabled` on the input and `text-muted-foreground` on its label.
 
 ```html
-<label class="flex h-8 items-center gap-2.5 type-small"><input type="radio" name="percentile" value="p95" checked class="size-4 shrink-0 appearance-none rounded-full border border-input bg-card transition-[border-width,border-color] checked:border-5 checked:border-primary" />p95 <span class="text-muted-foreground">default for alerts</span></label>
+<fieldset class="w-full"><legend class="type-ui">Choose one</legend><div class="mt-2 flex flex-col"><label class="flex h-8 items-center gap-2.5 type-small"><input type="radio" name="choice" value="a" class="size-4 shrink-0 appearance-none rounded-full border border-input bg-card transition-[border-width,border-color] checked:border-5 checked:border-primary disabled:opacity-40" />Option A</label><label class="flex h-8 items-center gap-2.5 type-small"><input type="radio" name="choice" value="b" checked class="size-4 shrink-0 appearance-none rounded-full border border-input bg-card transition-[border-width,border-color] checked:border-5 checked:border-primary disabled:opacity-40" />Option B <span class="text-muted-foreground">Default</span></label></div></fieldset>
 ```
 
 ### Checkbox
 
-A native checkbox with the `ledger-checkbox` utility: 16px, 4px radius, a primary fill with a white check when checked and a dash when `indeterminate` (set the property from script).
+A native checkbox with the `ledger-checkbox` utility: 16px, 4px radius, a primary fill with a white check when checked and a dash when `indeterminate` (set the property from script). A "Select all" box sits above its options, which are indented by 26px (`pl-6.5`), shows the dash when only some are checked, and its hint counts them (`2 of 3`).
 
 ```html
-<label class="flex h-8 items-center gap-2.5 type-small"><input type="checkbox" checked class="ledger-checkbox" />Invoice</label>
+<label class="flex h-8 items-center gap-2.5 type-small"><input type="checkbox" checked class="ledger-checkbox" />Option A</label>
 ```
 
 ### Text field
 
-32px field with a 13px label above and an optional unit on the right. Numeric fields are `type-mono text-right`.
+32px field with a 13px label above and an optional hint or unit. Numeric fields are `type-mono text-right`.
 
 ```html
-<label class="block w-full"><span class="type-ui">Alert threshold</span><span class="relative mt-1.5 block"><input type="text" inputmode="decimal" value="250" class="h-8 w-full rounded-sm border border-input bg-card px-3 type-small text-foreground placeholder:text-muted-foreground disabled:opacity-40 pr-10 type-mono text-right" /><span class="pointer-events-none absolute inset-y-0 right-3 flex items-center type-small text-muted-foreground">ms</span></span><span class="mt-1.5 block type-caption text-muted-foreground">p95 latency above this pages the on-call engineer.</span></label>
+<label class="block w-full"><span class="type-ui">Email</span><input type="email" placeholder="name@example.com" class="h-8 w-full rounded-sm border border-input bg-card px-3 type-small text-foreground placeholder:text-muted-foreground disabled:opacity-40 mt-1.5" /><span class="mt-1.5 block type-caption text-muted-foreground">Supporting text for the field.</span></label>
+<label class="block w-full"><span class="type-ui">Value</span><span class="relative mt-1.5 block"><input type="text" inputmode="decimal" value="12.5" class="h-8 w-full rounded-sm border border-input bg-card px-3 type-small text-foreground placeholder:text-muted-foreground disabled:opacity-40 pr-8 type-mono text-right" /><span class="pointer-events-none absolute inset-y-0 right-3 flex items-center type-small text-muted-foreground">%</span></span></label>
 ```
 
-For an error, add `aria-invalid="true"` and `aria-describedby`, swap `border-input` for `border-negative`, and put a `type-caption text-negative` message below that says how to fix the value. A search field puts a 16px search icon at `left-2.5` and pads the input with `pl-8`.
+An error adds `aria-invalid="true"` and `aria-describedby`, swaps `border-input` for `border-negative`, and puts a `type-caption text-negative` message below that says how to fix the value:
+
+```html
+<label class="block w-full"><span class="type-ui">Email</span><input type="email" value="name@example" aria-invalid="true" aria-describedby="email-error" class="h-8 w-full rounded-sm border border-input bg-card px-3 type-small text-foreground placeholder:text-muted-foreground disabled:opacity-40 mt-1.5 border-negative" /><span id="email-error" class="mt-1.5 block type-caption text-negative">Enter an email such as name@example.com.</span></label>
+```
+
+A disabled field has `disabled` and its label `text-muted-foreground`. A search field puts a 16px search icon at `left-2.5` and pads the input with `pl-8`.
 
 ### Segmented control
 
 A 32px track in `muted` with a hairline; segments are 28px buttons with `aria-pressed`, exactly one pressed, filled with `accent`.
 
 ```html
-<div role="group" aria-label="Period" class="inline-flex h-8 items-center gap-0.5 rounded-sm border border-border bg-muted p-0.5"><button type="button" aria-pressed="true" class="h-7 rounded-xs px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground">24h</button></div>
+<div role="group" aria-label="Period" class="inline-flex h-8 items-center gap-0.5 rounded-sm border border-border bg-muted p-0.5"><button type="button" aria-pressed="false" class="h-7 rounded-xs px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground">Day</button><button type="button" aria-pressed="true" class="h-7 rounded-xs px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground">Week</button><button type="button" aria-pressed="false" class="h-7 rounded-xs px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground">Month</button></div>
 ```
 
-Use it for a view switch of two to five short options (period, density, currency). Longer sets are Tabs.
+Use it for a view switch of two to five short options (Day / Week / Month, a date range, density). Longer sets are Tabs.
 
 ### Tabs
 
 36px tabs on a hairline; the selected tab is `foreground` with a 2px primary line. The arrow keys move between tabs and show the matching `tabpanel`.
 
 ```html
-<div role="tablist" aria-label="Sections" class="flex w-full gap-2 overflow-x-auto border-b border-border"><button type="button" role="tab" id="tab-invoices" aria-selected="true" aria-controls="panel-invoices" class="inline-flex h-9 shrink-0 items-center gap-1.5 border-b-2 border-transparent px-1 type-ui text-muted-foreground transition-colors hover:text-foreground aria-selected:border-primary aria-selected:text-foreground">Invoices<span class="inline-flex h-5 items-center rounded-sm border border-border bg-muted px-1.5 text-xs leading-4 font-medium">128</span></button></div>
-<div role="tabpanel" id="panel-invoices" aria-labelledby="tab-invoices" class="pt-2"><!-- content --></div>
+<div role="tablist" aria-label="Sections" class="flex w-full gap-2 overflow-x-auto border-b border-border"><button type="button" role="tab" id="tab-items" aria-selected="true" aria-controls="panel-items" class="inline-flex h-9 shrink-0 items-center gap-1.5 border-b-2 border-transparent px-1 type-ui text-muted-foreground transition-colors hover:text-foreground aria-selected:border-primary aria-selected:text-foreground">Items<span class="inline-flex h-5 items-center rounded-sm border border-border bg-muted px-1.5 text-xs leading-4 font-medium">128</span></button></div>
+<div role="tabpanel" id="panel-items" aria-labelledby="tab-items" class="pt-2"><!-- content --></div>
 ```
 
 ### Badge
@@ -516,22 +538,22 @@ Use it for a view switch of two to five short options (period, density, currency
 ```
 
 - Version or ID: add `font-mono`.
-- Quiet: add `text-muted-foreground`. Highlighted (one per view): `border-primary/40 text-primary`, for a single word only.
+- Quiet: add `text-muted-foreground`. Highlighted (one per view): `border-primary/40 text-primary`, for a single word only, such as New.
 
 ### Status pill
 
-The one round control: a 20px pill with a status dot and the word, in `foreground`. The dot is `success`, `warning`, `negative`, `info` or `muted-foreground`; the word always comes with it.
+The one round control: a 20px pill with a status dot and the word, in `foreground`. The dot is `success` (Active, Paid), `warning` (Pending, Due), `negative` (Failed, Overdue), `muted-foreground` (Draft) or `info` (Scheduled); the word always comes with it.
 
 ```html
-<span class="inline-flex h-5 items-center gap-1.5 rounded-full border border-border px-2 text-xs leading-4 font-medium whitespace-nowrap"><span class="size-1.5 rounded-full bg-success" aria-hidden="true"></span>Paid</span>
+<span class="inline-flex h-5 items-center gap-1.5 rounded-full border border-border px-2 text-xs leading-4 font-medium whitespace-nowrap"><span class="size-1.5 rounded-full bg-success" aria-hidden="true"></span>Active</span>
 ```
 
 ### Progress
 
-A 4px bar under a label row with a mono value. The fill is `primary`; a bar that reports a problem is `warning` or `negative`, and then the value gets a word (`92% used`).
+A 4px bar under a label row with a mono value. The fill is `primary`; a bar that reports a problem is `warning` or `negative`, and then the value is in the same color and gets a word (`92% used`, `100% reached`).
 
 ```html
-<div class="w-full"><div class="flex items-baseline justify-between"><span class="type-ui">Storage</span><span class="type-mono text-muted-foreground">64%</span></div><div role="progressbar" aria-label="Storage" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100" class="mt-2 h-1 w-full overflow-hidden rounded-xs bg-secondary"><div class="h-full w-[64%] rounded-xs bg-primary"></div></div></div>
+<div class="w-full"><div class="flex items-baseline justify-between"><span class="type-ui">Progress</span><span class="type-mono text-muted-foreground">64%</span></div><div role="progressbar" aria-label="Progress" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100" class="mt-2 h-1 w-full overflow-hidden rounded-xs bg-secondary"><div class="h-full w-[64%] rounded-xs bg-primary"></div></div></div>
 ```
 
 ### List
@@ -539,7 +561,7 @@ A 4px bar under a label row with a mono value. The fill is `primary`; a bar that
 Key-value rows of 36px in a 6px bordered panel: the label in `muted-foreground` left, the mono value right.
 
 ```html
-<ul class="w-full divide-y divide-border rounded-md border border-border"><li class="flex h-9 items-center justify-between gap-4 px-3"><span class="type-small text-muted-foreground">Region</span><span class="type-mono">ap-southeast-1</span></li></ul>
+<ul class="w-full divide-y divide-border rounded-md border border-border"><li class="flex h-9 items-center justify-between gap-4 px-3"><span class="type-small text-muted-foreground">Account</span><span class="type-mono">Personal</span></li></ul>
 ```
 
 ### Spinner
@@ -555,37 +577,38 @@ Key-value rows of 36px in a 6px bordered panel: the label in `muted-foreground` 
 The panel every dashboard is made of: 8px radius, hairline, a 40px header row with the title and quiet icon buttons, a body with 16px padding, and an optional 40px footer.
 
 ```html
-<article class="flex w-full flex-col rounded-lg border border-border bg-card"><header class="flex h-10 items-center justify-between border-b border-border pr-2 pl-4"><h3 class="type-title">Error budget</h3><!-- icon buttons --></header><div class="flex flex-col gap-1 p-4"><span class="type-overline text-muted-foreground">Remaining</span><span class="type-display">8.0%</span><span class="type-caption text-muted-foreground">Resets 1 Nov · burn rate 1.4× over the last 6 h</span></div><footer class="flex h-10 items-center justify-between border-t border-border px-4"><span class="type-caption text-muted-foreground">Updated 09:12:04</span><!-- ghost button --></footer></article>
+<article class="flex w-full flex-col rounded-lg border border-border bg-card"><header class="flex h-10 items-center justify-between border-b border-border pr-2 pl-4"><h3 class="type-title">Card title</h3><!-- icon buttons --></header><div class="flex flex-col gap-1 p-4"><span class="type-overline text-muted-foreground">Metric</span><span class="type-display">12.5%</span><span class="type-caption text-muted-foreground">Supporting text that explains the item in a line or two.</span></div><footer class="flex h-10 items-center justify-between border-t border-border pr-2 pl-4"><span class="type-caption text-muted-foreground">Updated 14 Oct 2026</span><!-- small ghost button --></footer></article>
 ```
 
 ### Data table
 
-36px rows in a scrolling 6px container, a sticky `muted` header with overline labels, a checkbox column, right-aligned mono numbers and a status pill. A sortable header is a button inside a `th` with `aria-sort`; the `ledger-sort` utility draws the arrow from that attribute. A selected row carries `data-selected`.
+36px rows in a 6px bordered container, a `muted` header with overline labels, a checkbox column, right-aligned mono numbers and a status pill. A sortable header is a button inside a `th` with `aria-sort`; the `ledger-sort` utility draws the arrow from that attribute. A selected row carries `data-selected`.
 
 ```html
-<div class="w-full max-h-63 overflow-auto rounded-md border border-border"><table class="w-full border-collapse type-small"><thead class="sticky top-0 z-10 bg-muted"><tr><th scope="col" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)] w-9"><input type="checkbox" class="ledger-checkbox" aria-label="Select all invoices" /></th><th scope="col" aria-sort="none" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]"><button type="button" class="ledger-sort inline-flex items-center rounded-xs type-overline transition-colors hover:text-foreground">Invoice</button></th><th scope="col" aria-sort="none" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)] text-right"><button type="button" class="ledger-sort inline-flex items-center rounded-xs type-overline transition-colors hover:text-foreground">Amount</button></th><th scope="col" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]">Status</th></tr></thead><tbody><tr class="h-9 border-b border-border last:border-b-0 transition-colors hover:bg-accent/40 data-selected:bg-primary/10"><td class="px-2 whitespace-nowrap"><input type="checkbox" class="ledger-checkbox" aria-label="Select INV-0912" /></td><td class="px-2 whitespace-nowrap type-mono" data-sort="INV-0912">INV-0912</td><td class="px-2 whitespace-nowrap type-mono text-right" data-sort="1240">$1,240.00</td><td class="px-2 whitespace-nowrap"><!-- status pill --></td></tr></tbody></table></div>
+<div class="w-full overflow-x-auto rounded-md border border-border"><table class="w-full border-collapse type-small"><thead class="bg-muted"><tr><th scope="col" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)] w-9"><input type="checkbox" class="ledger-checkbox" aria-label="Select all rows" /></th><th scope="col" aria-sort="none" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]"><button type="button" class="ledger-sort inline-flex items-center rounded-xs type-overline transition-colors hover:text-foreground">Name</button></th><th scope="col" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]">Status</th><th scope="col" aria-sort="none" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]"><button type="button" class="ledger-sort inline-flex items-center rounded-xs type-overline transition-colors hover:text-foreground">Updated</button></th><th scope="col" aria-sort="none" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)] text-right"><button type="button" class="ledger-sort inline-flex items-center rounded-xs type-overline transition-colors hover:text-foreground">Value</button></th></tr></thead><tbody><tr class="h-9 border-b border-border last:border-b-0 transition-colors hover:bg-accent/40 data-selected:bg-primary/10"><td class="px-2 whitespace-nowrap"><input type="checkbox" class="ledger-checkbox" aria-label="Select Item A" /></td><td class="px-2 whitespace-nowrap" data-sort="Item A">Item A</td><td class="px-2 whitespace-nowrap"><span class="inline-flex h-5 items-center gap-1.5 rounded-full border border-border px-2 text-xs leading-4 font-medium whitespace-nowrap"><span class="size-1.5 rounded-full bg-success" aria-hidden="true"></span>Active</span></td><td class="px-2 whitespace-nowrap type-mono text-muted-foreground" data-sort="2026-10-14">14 Oct 2026</td><td class="px-2 whitespace-nowrap type-mono text-right" data-sort="1234">1,234</td></tr></tbody></table></div>
 ```
 
-- Clicking a sort button sets its `th` to `ascending` or `descending`, resets the others to `none`, and reorders the rows by the cells' `data-sort` values.
+- Clicking a sort button sets its `th` to `ascending` or `descending`, resets the others to `none`, and reorders the rows by the cells' `data-sort` values (dates as ISO strings, numbers without separators).
 - The header checkbox selects every row and is `indeterminate` when only some are selected.
-- Compact tables use `h-8` rows. Amounts in mixed currencies stay right-aligned in one mono column.
+- The table takes the height of its rows and never scrolls vertically: show a page of rows and put Pagination under it. The container scrolls sideways only when the columns do not fit (below 640px).
+- Compact tables use `h-8` rows. Dates and amounts are mono; amounts in one currency stay right-aligned in one column.
 
 ### Stat
 
-A KPI: an overline label, the value in `type-display`, a signed delta in `positive` or `negative`, an inline SVG sparkline in `chart-1`, and secondary rows below a hairline. The sparkline is a `polyline` path in a 240×48 box with `preserveAspectRatio="none"` and `vector-effect="non-scaling-stroke"`, so it stretches to the panel and keeps a 1.5px line.
+A KPI: an overline label, the value in `type-display`, a signed delta in `positive` or `negative`, an inline SVG sparkline in `chart-1`, and secondary rows below a hairline. The sparkline is a `path` in a 240×48 box with `preserveAspectRatio="none"` and `vector-effect="non-scaling-stroke"`, so it stretches to the panel and keeps a 1.5px line.
 
 ```html
-<div class="flex w-full flex-col"><div class="flex items-center justify-between"><span class="type-overline text-muted-foreground">Requests / s</span><span class="type-caption text-muted-foreground">Last 24 h</span></div><div class="mt-1 flex items-baseline gap-2"><span class="type-display">12,480</span><span class="inline-flex items-center gap-1 type-ui text-positive"><svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M4 1 7.5 7h-7z" fill="currentColor"/></svg>4.2%</span></div><svg class="mt-3 h-12 w-full text-chart-1" viewBox="0 0 240 48" preserveAspectRatio="none" aria-hidden="true"><path d="M0.0 46.0 L17.1 41.6 L34.3 44.7 L51.4 35.6 L68.6 38.4 L85.7 28.2 L102.9 22.8 L120.0 28.9 L137.1 20.0 L154.3 16.4 L171.4 20.5 L188.6 10.9 L205.7 6.5 L222.9 11.9 L240.0 2.0 L240 48 L0 48 Z" fill="currentColor" fill-opacity="0.1"/><path d="M0.0 46.0 L17.1 41.6 L34.3 44.7 L51.4 35.6 L68.6 38.4 L85.7 28.2 L102.9 22.8 L120.0 28.9 L137.1 20.0 L154.3 16.4 L171.4 20.5 L188.6 10.9 L205.7 6.5 L222.9 11.9 L240.0 2.0" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg><div class="mt-3 flex items-baseline justify-between border-t border-border pt-3"><span class="type-small text-muted-foreground">p95 latency</span><span class="inline-flex items-baseline gap-2"><span class="type-mono">212 ms</span><span class="inline-flex items-center gap-1 type-ui text-positive"><svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M4 7 .5 1h7z" fill="currentColor"/></svg>8 ms</span></span></div></div>
+<div class="flex w-full flex-col"><div class="flex items-center justify-between"><span class="type-overline text-muted-foreground">Metric</span><span class="type-caption text-muted-foreground">Last 24 h</span></div><div class="mt-1 flex items-baseline gap-2"><span class="type-display">1,234</span><span class="inline-flex items-center gap-1 type-ui text-positive"><svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M4 1 7.5 7h-7z" fill="currentColor"/></svg>2.4%</span></div><svg class="mt-3 h-12 w-full text-chart-1" viewBox="0 0 240 48" preserveAspectRatio="none" aria-hidden="true"><path d="M0.0 46.0 L17.1 40.5 L34.3 43.6 L51.4 34.2 L68.6 37.2 L85.7 26.6 L102.9 21.1 L120.0 27.3 L137.1 18.1 L154.3 14.5 L171.4 18.6 L188.6 8.8 L205.7 4.3 L222.9 9.8 L240.0 2.0 L240 48 L0 48 Z" fill="currentColor" fill-opacity="0.1"/><path d="M0.0 46.0 L17.1 40.5 L34.3 43.6 L51.4 34.2 L68.6 37.2 L85.7 26.6 L102.9 21.1 L120.0 27.3 L137.1 18.1 L154.3 14.5 L171.4 18.6 L188.6 8.8 L205.7 4.3 L222.9 9.8 L240.0 2.0" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg><div class="mt-3 flex items-baseline justify-between border-t border-border pt-3"><span class="type-small text-muted-foreground">Rate</span><span class="inline-flex items-baseline gap-2"><span class="type-mono">12.5%</span><span class="inline-flex items-center gap-1 type-ui text-positive"><svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M4 1 7.5 7h-7z" fill="currentColor"/></svg>0.4 pt</span></span></div></div>
 ```
 
-The delta's color says whether the change is good, the triangle says which way it went: lower latency is a green ▼. The sparkline carries no status color.
+The delta's color says whether the change is good, the triangle says which way it went: a duration that grew is a red ▲, a cost that fell a green ▼. The sparkline carries no status color.
 
 ### Toolbar
 
 A `role="toolbar"` row above a list or table: a search field that grows, filter chips (with a chevron when they open a menu) and an action button, wrapping on narrow screens.
 
 ```html
-<div role="toolbar" aria-label="Invoices" class="flex w-full flex-wrap items-center gap-2"><label class="relative min-w-40 flex-1"><span class="sr-only">Search invoices</span><span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-muted-foreground"><!-- 16px search icon --></span><input type="search" placeholder="Search invoices, customers, IDs" class="h-8 w-full rounded-sm border border-input bg-card px-3 type-small text-foreground placeholder:text-muted-foreground disabled:opacity-40 pl-8" /></label><div role="group" aria-label="Filters" class="flex gap-2"><!-- chips --></div><!-- secondary button --></div>
+<div role="toolbar" aria-label="Items" class="flex w-full flex-wrap items-center gap-2"><label class="relative min-w-40 flex-1"><span class="sr-only">Search</span><span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-muted-foreground"><!-- 16px search icon --></span><input type="search" placeholder="Search" class="h-8 w-full rounded-sm border border-input bg-card px-3 type-small text-foreground placeholder:text-muted-foreground disabled:opacity-40 pl-8" /></label><div role="group" aria-label="Filters" class="flex gap-2"><!-- chips: Status, Date --></div><!-- secondary button: Export --></div>
 ```
 
 ### Keyboard key
@@ -598,20 +621,20 @@ A 20px key in the mono face with a 2px bottom border. Keys of one shortcut sit 4
 
 ### Code
 
-A log block: a 6px `muted` panel with one mono line per entry, a muted timestamp, the level in `info`, `warning` or `negative` (the level is the word that goes with the color), a muted source and the message. Lines do not wrap; the block scrolls sideways.
+A log block: a 6px `muted` panel with one mono line per entry: a muted timestamp, the level as a word in `info`, `warning` or `negative`, and the message. Lines do not wrap; the block scrolls sideways.
 
 ```html
-<div class="w-full overflow-x-auto rounded-md border border-border bg-muted p-3 type-mono"><div class="flex flex-col gap-1"><span class="flex gap-3 whitespace-nowrap"><span class="text-muted-foreground">09:12:04.118</span><span class="w-10 text-info">INFO</span><span class="w-14 text-muted-foreground">deploy</span><span>api-gateway v2.14.0 → prod (8f3c1a2) 38 s</span></span></div></div>
+<div class="w-full overflow-x-auto rounded-md border border-border bg-muted p-3 type-mono"><div class="flex flex-col gap-1"><span class="flex gap-3 whitespace-nowrap"><span class="shrink-0 text-muted-foreground">12:04:31</span><span class="w-10 shrink-0 text-info">info</span><span>Task started</span></span><span class="flex gap-3 whitespace-nowrap"><span class="shrink-0 text-muted-foreground">12:04:33</span><span class="w-10 shrink-0 text-warning">warn</span><span>Retry 1 of 3</span></span></div></div>
 ```
 
-Inline code in prose: `<code class="rounded-xs bg-muted px-1 py-0.5 type-mono">pnpm build</code>`.
+A source column (`w-16 shrink-0 text-muted-foreground`) may sit between the level and the message. Inline code in prose: `<code class="rounded-xs bg-muted px-1 py-0.5 type-mono">pnpm build</code>`.
 
 ### Pagination
 
 A `nav` with the range in mono on the left and 28px page buttons on the right; the current page has `aria-current="page"` and the `accent` fill. Previous and next are small icon buttons, disabled at the ends.
 
 ```html
-<nav aria-label="Pagination" class="flex w-full flex-wrap items-center justify-between gap-3"><span class="type-small text-muted-foreground"><span class="type-mono text-foreground">1–50</span> of <span class="type-mono text-foreground">1,284</span></span><div class="flex items-center gap-0.5"><button type="button" aria-label="Previous page" disabled class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40"><!-- chevron-left --></button><button type="button" aria-current="page" class="h-7 min-w-7 rounded-sm px-1.5 type-mono text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-foreground">1</button><button type="button" aria-label="Next page" class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40"><!-- chevron-right --></button></div></nav>
+<nav aria-label="Pagination" class="flex w-full flex-wrap items-center justify-between gap-3"><span class="type-small text-muted-foreground"><span class="type-mono text-foreground">1–50</span> of <span class="type-mono text-foreground">1,234</span></span><div class="flex items-center gap-0.5"><button type="button" aria-label="Previous page" disabled class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40"><!-- chevron-left --></button><button type="button" aria-current="page" class="h-7 min-w-7 rounded-sm px-1.5 type-mono text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-foreground">1</button><button type="button" aria-label="Next page" class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40"><!-- chevron-right --></button></div></nav>
 ```
 
 ### Tooltip
@@ -619,7 +642,7 @@ A `nav` with the range in mono on the left and 28px page buttons on the right; t
 CSS only: a `group` wrapper shows the `role="tooltip"` element on hover and on focus within. The tooltip is the raised layer (`popover`) with the hairline and the one shadow, 12px text, one line where possible. The trigger points at it with `aria-describedby`; `data-open` on the wrapper keeps one open in documentation.
 
 ```html
-<span class="group relative inline-flex"><button type="button" aria-describedby="tip-p95" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 border border-input bg-card text-foreground hover:bg-accent h-7 px-2.5">p95</button><span role="tooltip" id="tip-p95" class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-max max-w-56 -translate-x-1/2 rounded-sm border border-border bg-popover px-2 py-1 type-caption text-popover-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 group-data-open:opacity-100">95th percentile of request latency</span></span>
+<span class="group relative inline-flex"><button type="button" aria-describedby="tip-label" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 border border-input bg-card text-foreground hover:bg-accent h-7 px-2.5">Label</button><span role="tooltip" id="tip-label" class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 w-max max-w-56 -translate-x-1/2 rounded-sm border border-border bg-popover px-2 py-1 type-caption text-popover-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 group-data-open:opacity-100">Tooltip text, one short line</span></span>
 ```
 
 ### Focus

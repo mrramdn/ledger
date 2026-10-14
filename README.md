@@ -9,11 +9,12 @@ A dense, dark-first design system for data-heavy product interfaces: dashboards,
 | File | What it is |
 | --- | --- |
 | `ledger.css` | Tailwind CSS v4 theme: color tokens (light and dark, with a data palette `chart-1`…`chart-5`, `positive`, `negative`, `info`), radii, the one shadow, type utilities, slider, checkbox and sort-header utilities. Token names follow shadcn/ui. |
-| `DESIGN.md` | The rules and the 23 component recipes, in the [design.md](https://github.com/google-labs-code/design.md) format, with the measured contrast of both modes. |
-| `preview/index.html` | Component gallery built with the theme, laid out as an operations and billing dashboard. Has a dark mode switch, category filters, and copy and reset buttons per panel. |
+| `DESIGN.md` | The rules and the 24 component recipes, in the [design.md](https://github.com/google-labs-code/design.md) format, with the measured contrast of both modes. |
+| `preview/index.html` | Component gallery: one card per recipe with placeholder content, showing variants, sizes and states. Has a dark mode switch, category filters, and copy and reset buttons per card. |
+| `preview/demo.html` | An example screen, the billing and operations dashboard of a small software company, built only from the recipes. Dark first. |
 | `CHANGELOG.md` | What changed in each version. |
 
-Figma: [Ledger Design System](https://www.figma.com/design/81WUGAI2i0QQoUpjy271bm) (pages Cover, Foundations and Components).
+Figma: [Ledger Design System](https://www.figma.com/design/81WUGAI2i0QQoUpjy271bm) (pages Cover, Foundations, Components and Example; Example rebuilds the demo screen from instances in light and dark).
 
 ## Use it in a project
 
@@ -34,11 +35,11 @@ The theme removes the default Tailwind color palette on purpose. Use the semanti
 
 ```sh
 pnpm install
-pnpm build   # writes preview/preview.css from the classes in preview/index.html
+pnpm build   # writes preview/preview.css from the classes in preview/index.html and preview/demo.html
 pnpm dev     # same, watching for changes
 ```
 
-Then open `preview/index.html` in a browser. Copy needs a secure context, so serve the folder (`python3 -m http.server -d preview`) if the clipboard button does nothing over `file://`.
+Then open `preview/index.html` for the component gallery, or `preview/demo.html` for the example screen: a billing dashboard with KPIs, a revenue chart, an invoice table and an activity log, made only from the recipes. Copy needs a secure context, so serve the folder (`python3 -m http.server -d preview`) if the clipboard button does nothing over `file://`.
 
 `npx @google/design.md lint DESIGN.md` checks the token file.
 

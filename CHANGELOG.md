@@ -3,6 +3,29 @@
 Ledger uses semantic versions. While it is in beta, a minor version adds or changes tokens, components or rules,
 and a patch fixes them. Every version is a git tag (`v0.1.0`) and an entry in the design site's record.
 
+## 0.2.0 (2026-10-14)
+
+A blank component sheet and an example screen.
+
+- The gallery is a component sheet with placeholder content instead of a billing dashboard: Save, Continue,
+  Cancel and Delete; Email with name@example.com; Option A to D; Active, Pending, Failed, Draft and Scheduled; a
+  table of Item A to E under Name, Status, Updated and Value. It has 24 cards (12 with reset) that show variants,
+  sizes, disabled, error, and selected and unselected states, laid out as a masonry of cards at their natural
+  height, with no scroll area inside a card.
+- One new recipe, Button sizes (small, default and large, disabled and busy), so `DESIGN.md` has 24 recipes; every
+  recipe's markup uses the gallery's placeholder content. The Data table, Code, Text field, Checkbox, Single
+  selection, Toggle and Progress recipes describe their states; the data table no longer scrolls vertically.
+- `preview/demo.html`: the billing and operations console of a small software company, built only from the
+  recipes: a sidebar, a toolbar with search and a date range, four KPI stats with sparklines, a stacked revenue
+  chart in the data palette, an invoice table with tabs, plan chips, sorting, selection and pagination, a
+  collections panel, an activity log, and dunning settings. Dark first; `preview/input.css` scans it too.
+- Figma: placeholder content in the components, the Cover and both galleries; the Table row gains an Updated
+  column, Code an optional source, Progress a negative tone (111 variants in 24 sets) and 11 new icons (27);
+  the galleries were rebuilt as the same sheet; a new Example page has `Example/Light` and `Example/Dark`, the
+  dashboard rebuilt from instances, with the chart drawn from shapes bound to the variables.
+- Fixes: the gallery and the demo take the height of their content and never the window's; log columns keep
+  their width on narrow screens.
+
 ## 0.1.0 (2026-10-14)
 
 First beta.

@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ledger example: billing dashboard</title>
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="preview.css" />
+  </head>
+  <body>
+    <!--
+      An example screen built only from Ledger's recipes in DESIGN.md plus layout utilities: the billing and
+      operations console of Anyam, a small company that sells a point-of-sale app to Indonesian shops.
+      Every name, number and log line is made up.
+    -->
+    <div class="flex flex-col lg:flex-row">
+      <aside class="flex shrink-0 flex-col border-b border-border bg-card lg:w-56 lg:border-r lg:border-b-0">
+        <div class="flex h-14 items-center gap-2.5 border-b border-border px-4">
+          <span class="inline-flex size-7 shrink-0 items-center justify-center rounded-sm bg-foreground font-mono text-sm font-semibold text-background" aria-hidden="true">A</span>
+          <span class="flex min-w-0 flex-col">
+            <span class="type-title">Anyam</span>
+            <span class="type-caption text-muted-foreground">Billing console</span>
+          </span>
+        </div>
+        <nav aria-label="Main" id="nav" class="flex gap-0.5 overflow-x-auto p-2 lg:flex-col lg:overflow-visible"></nav>
+        <div class="mt-auto hidden items-center gap-2.5 border-t border-border px-4 py-3 lg:flex">
+          <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-sm bg-accent type-ui" aria-hidden="true">AP</span>
+          <span class="flex min-w-0 flex-col">
+            <span class="truncate type-ui">Ayu Pratiwi</span>
+            <span class="type-caption text-muted-foreground">Finance lead</span>
+          </span>
+        </div>
+      </aside>
+
+      <div class="flex min-w-0 flex-1 flex-col">
+        <header class="flex h-10 items-center justify-between gap-4 border-b border-border bg-card pr-2 pl-4 lg:pl-6">
+          <p class="truncate type-small text-muted-foreground">Billing <span aria-hidden="true">/</span> <span class="text-foreground">Overview</span></p>
+          <div class="flex items-center gap-2">
+            <span class="hidden type-mono text-xs text-muted-foreground sm:inline">production · ap-southeast-3</span>
+            <span class="inline-flex h-5 items-center gap-1.5 rounded-full border border-border px-2 text-xs leading-4 font-medium whitespace-nowrap"><span class="size-1.5 rounded-full bg-success" aria-hidden="true"></span>Operational</span>
+            <button type="button" aria-label="Notifications" class="inline-flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40" data-icon="bell"></button>
+          </div>
+        </header>
+
+        <main class="flex flex-col gap-4 p-4 lg:p-6">
+          <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
+            <div>
+              <h1 class="type-h1">Overview</h1>
+              <p class="type-small text-muted-foreground">Revenue, payments and service health for Anyam Kasir.</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <span id="updated" class="type-caption text-muted-foreground">Updated <span class="type-mono">12:04:31</span> WIB</span>
+              <span id="syncing" role="status" aria-label="Refreshing" hidden class="mx-2 size-4 animate-spin rounded-full border-2 border-secondary border-t-primary"></span>
+              <button id="refresh" type="button" aria-label="Refresh" class="inline-flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40" data-icon="refresh"></button>
+            </div>
+          </div>
+
+          <div role="toolbar" aria-label="Overview" class="flex w-full flex-wrap items-center gap-2">
+            <label class="relative min-w-48 flex-1">
+              <span class="sr-only">Search invoices and customers</span>
+              <span class="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-muted-foreground" data-icon="search"></span>
+              <input id="search" type="search" placeholder="Search invoices and customers" class="h-8 w-full rounded-sm border border-input bg-card px-3 type-small text-foreground placeholder:text-muted-foreground disabled:opacity-40 pl-8 pr-14" />
+              <span class="pointer-events-none absolute inset-y-0 right-2 flex items-center gap-1"><kbd class="inline-flex h-5 min-w-5 items-center justify-center rounded-xs border border-b-2 border-border bg-muted px-1 font-mono text-xs leading-4 text-muted-foreground">⌘</kbd><kbd class="inline-flex h-5 min-w-5 items-center justify-center rounded-xs border border-b-2 border-border bg-muted px-1 font-mono text-xs leading-4 text-muted-foreground">K</kbd></span>
+            </label>
+            <div id="range" role="group" aria-label="Date range" class="inline-flex h-8 items-center gap-0.5 rounded-sm border border-border bg-muted p-0.5">
+              <button type="button" aria-pressed="false" data-range="7d" class="h-7 rounded-xs px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground">7d</button>
+              <button type="button" aria-pressed="true" data-range="30d" class="h-7 rounded-xs px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground">30d</button>
+              <button type="button" aria-pressed="false" data-range="90d" class="h-7 rounded-xs px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground">90d</button>
+              <button type="button" aria-pressed="false" data-range="12m" class="h-7 rounded-xs px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground">12m</button>
+            </div>
+            <button type="button" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 border border-input bg-card text-foreground hover:bg-accent"><span data-icon="download"></span>Export</button>
+            <button type="button" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 bg-primary text-primary-foreground hover:bg-primary-hover"><span data-icon="plus"></span>Create invoice</button>
+          </div>
+
+          <section id="kpis" aria-label="Key figures" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5"></section>
+
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <article class="flex w-full flex-col rounded-lg border border-border bg-card lg:col-span-2">
+              <header class="flex h-10 items-center justify-between gap-4 border-b border-border pr-2 pl-4">
+                <h2 class="type-title">Revenue</h2>
+                <div class="flex items-center gap-4">
+                  <span class="inline-flex items-center gap-1.5 type-caption text-muted-foreground"><span class="size-2 rounded-xs bg-chart-1" aria-hidden="true"></span>Subscriptions</span>
+                  <span class="inline-flex items-center gap-1.5 type-caption text-muted-foreground"><span class="size-2 rounded-xs bg-chart-2" aria-hidden="true"></span>Usage</span>
+                  <button type="button" aria-label="More actions" class="inline-flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40" data-icon="more"></button>
+                </div>
+              </header>
+              <div class="flex flex-col p-4">
+                <span id="chart-unit" class="type-caption text-muted-foreground">Rp million per day</span>
+                <div id="chart" class="relative mt-2 h-48 w-full"></div>
+              </div>
+              <footer class="flex h-10 items-center justify-between gap-4 border-t border-border pr-2 pl-4">
+                <span id="chart-total" class="truncate type-caption text-muted-foreground"></span>
+                <button type="button" class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 text-muted-foreground hover:bg-accent hover:text-foreground h-7 px-2">Open report</button>
+              </footer>
+            </article>
+
+            <article class="flex w-full flex-col rounded-lg border border-border bg-card">
+              <header class="flex h-10 items-center justify-between border-b border-border pr-2 pl-4">
+                <h2 class="type-title">Collections</h2>
+                <span class="pr-2 type-caption text-muted-foreground">1–14 Oct</span>
+              </header>
+              <div class="flex flex-col gap-4 p-4">
+                <div id="collected"></div>
+                <ul id="collection-list" class="w-full divide-y divide-border rounded-md border border-border"></ul>
+              </div>
+            </article>
+          </div>
+
+          <article id="invoices" class="flex w-full flex-col rounded-lg border border-border bg-card">
+            <header class="flex h-10 items-center justify-between gap-4 border-b border-border pr-2 pl-4">
+              <h2 class="type-title">Invoices <span class="font-normal text-muted-foreground">October 2026</span></h2>
+              <div class="flex items-center gap-2">
+                <span id="selection" class="hidden type-caption text-muted-foreground sm:inline"></span>
+                <button id="remind" type="button" disabled class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 border border-input bg-card text-foreground hover:bg-accent h-7 px-2.5"><span data-icon="send"></span>Send reminder</button>
+              </div>
+            </header>
+            <div class="flex flex-col gap-3 p-4">
+              <div class="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+                <div role="tablist" aria-label="Invoice status" id="tabs" class="flex gap-2 overflow-x-auto border-b border-border"></div>
+                <div role="group" aria-label="Plan" id="plans" class="flex flex-wrap gap-2"></div>
+              </div>
+              <div role="tabpanel" id="invoice-panel" class="flex flex-col gap-3">
+                <div class="relative w-full overflow-x-auto rounded-md border border-border">
+                  <table class="w-full border-collapse type-small">
+                    <thead class="bg-muted">
+                      <tr>
+                        <th scope="col" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)] w-9"><input id="select-all" type="checkbox" class="ledger-checkbox" aria-label="Select all invoices on this page" /></th>
+                        <th scope="col" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]">Invoice</th>
+                        <th scope="col" aria-sort="none" data-key="customer" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]"><button type="button" class="ledger-sort inline-flex items-center rounded-xs type-overline transition-colors hover:text-foreground">Customer</button></th>
+                        <th scope="col" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]">Plan</th>
+                        <th scope="col" aria-sort="descending" data-key="issued" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]"><button type="button" class="ledger-sort inline-flex items-center rounded-xs type-overline transition-colors hover:text-foreground">Issued</button></th>
+                        <th scope="col" aria-sort="none" data-key="amount" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)] text-right"><button type="button" class="ledger-sort inline-flex items-center rounded-xs type-overline transition-colors hover:text-foreground">Amount</button></th>
+                        <th scope="col" class="h-9 px-2 text-left whitespace-nowrap type-overline text-muted-foreground shadow-[inset_0_-1px_0_0_var(--border)]">Status</th>
+                        <th scope="col" class="h-9 w-9 px-2 shadow-[inset_0_-1px_0_0_var(--border)]"><span class="sr-only">Actions</span></th>
+                      </tr>
+                    </thead>
+                    <tbody id="rows"></tbody>
+                  </table>
+                </div>
+                <nav aria-label="Pagination" id="pages" class="flex w-full flex-wrap items-center justify-between gap-3"></nav>
+              </div>
+            </div>
+          </article>
+
+          <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <article class="flex w-full min-w-0 flex-col rounded-lg border border-border bg-card lg:col-span-2">
+              <header class="flex h-10 items-center justify-between border-b border-border pr-2 pl-4">
+                <h2 class="type-title">Activity</h2>
+                <span class="inline-flex h-5 items-center rounded-sm border border-border bg-muted px-1.5 text-xs leading-4 font-medium font-mono">api v3.8.2</span>
+              </header>
+              <div class="flex flex-col p-4">
+                <div class="w-full overflow-x-auto rounded-md border border-border bg-muted p-3 type-mono"><div id="log" class="flex flex-col gap-1"></div></div>
+              </div>
+              <footer class="mt-auto flex h-10 items-center justify-between gap-4 border-t border-border px-4">
+                <span class="truncate type-caption text-muted-foreground">Billing, webhooks and deploys, newest first</span>
+                <span class="hidden items-center gap-1 sm:flex"><kbd class="inline-flex h-5 min-w-5 items-center justify-center rounded-xs border border-b-2 border-border bg-muted px-1 font-mono text-xs leading-4 text-muted-foreground">G</kbd><span class="type-caption text-muted-foreground">then</span><kbd class="inline-flex h-5 min-w-5 items-center justify-center rounded-xs border border-b-2 border-border bg-muted px-1 font-mono text-xs leading-4 text-muted-foreground">I</kbd><span class="ml-1 type-caption text-muted-foreground">invoices</span></span>
+              </footer>
+            </article>
+
+            <article id="dunning" class="flex w-full flex-col rounded-lg border border-border bg-card">
+              <header class="flex h-10 items-center justify-between border-b border-border pr-2 pl-4">
+                <h2 class="type-title">Failed payments</h2>
+                <span class="group relative inline-flex">
+                  <button type="button" aria-label="About failed payments" aria-describedby="tip-dunning" class="inline-flex size-8 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40" data-icon="help"></button>
+                  <span role="tooltip" id="tip-dunning" class="pointer-events-none absolute right-0 bottom-full z-10 mb-2 w-max max-w-56 rounded-sm border border-border bg-popover px-2 py-1 type-caption text-popover-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 group-data-open:opacity-100">Card and e-wallet charges are tried again on this schedule before anyone is emailed.</span>
+                </span>
+              </header>
+              <div class="flex flex-col gap-3 p-4">
+                <div class="flex h-9 w-full items-center justify-between gap-4"><span class="type-small">Retry automatically</span><button id="retry" type="button" role="switch" aria-checked="true" aria-label="Retry automatically" class="group relative h-5 w-9 shrink-0 rounded-sm bg-input transition-colors aria-checked:bg-primary disabled:opacity-40"><span class="absolute top-0.5 left-0.5 size-4 rounded-xs bg-white transition-transform group-aria-checked:translate-x-4"></span></button></div>
+                <div class="w-full"><div class="flex items-baseline justify-between"><label for="interval" class="type-ui">Retry every</label><output for="interval" class="type-mono text-muted-foreground" data-unit=" days">3 days</output></div><input id="interval" type="range" min="1" max="7" value="3" class="ledger-slider mt-2" /></div>
+                <fieldset id="after" class="w-full">
+                  <legend class="type-ui">After the third retry</legend>
+                  <div class="mt-1 flex flex-col">
+                    <label class="flex h-8 items-center gap-2.5 type-small"><input type="radio" name="after" value="pause" checked class="size-4 shrink-0 appearance-none rounded-full border border-input bg-card transition-[border-width,border-color] checked:border-5 checked:border-primary disabled:opacity-40" />Pause the workspace</label>
+                    <label class="flex h-8 items-center gap-2.5 type-small"><input type="radio" name="after" value="cancel" class="size-4 shrink-0 appearance-none rounded-full border border-input bg-card transition-[border-width,border-color] checked:border-5 checked:border-primary disabled:opacity-40" />Cancel the subscription</label>
+                  </div>
+                </fieldset>
+                <div class="flex h-9 w-full items-center justify-between gap-4 border-t border-border pt-3"><span class="type-small">WhatsApp reminders</span><button type="button" role="switch" aria-checked="true" aria-label="WhatsApp reminders" class="group relative h-5 w-9 shrink-0 rounded-sm bg-input transition-colors aria-checked:bg-primary disabled:opacity-40"><span class="absolute top-0.5 left-0.5 size-4 rounded-xs bg-white transition-transform group-aria-checked:translate-x-4"></span></button></div>
+              </div>
+            </article>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script>
+      const icon = (paths, size = 16) =>
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+      const icons = {
+        overview: icon('<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>'),
+        invoices: icon('<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>'),
+        customers: icon('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+        subscriptions: icon('<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>'),
+        payments: icon('<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>'),
+        services: icon('<rect width="20" height="8" x="2" y="2" rx="2" ry="2"/><rect width="20" height="8" x="2" y="14" rx="2" ry="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/>'),
+        logs: icon('<polyline points="4 17 10 11 4 5"/><line x1="12" x2="20" y1="19" y2="19"/>'),
+        settings: icon('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'),
+        keys: icon('<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>'),
+        bell: icon('<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'),
+        refresh: icon('<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>'),
+        search: icon('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'),
+        download: icon('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>'),
+        plus: icon('<path d="M5 12h14"/><path d="M12 5v14"/>'),
+        more: icon('<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'),
+        help: icon('<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>'),
+        send: icon('<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>'),
+        chevronLeft: icon('<path d="m15 18-6-6 6-6"/>'),
+        chevronRight: icon('<path d="m9 18 6-6-6-6"/>'),
+      };
+      for (const el of document.querySelectorAll('[data-icon]')) el.insertAdjacentHTML('afterbegin', icons[el.dataset.icon]);
+      const up = '<svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M4 1 7.5 7h-7z" fill="currentColor"/></svg>';
+      const down = '<svg width="8" height="8" viewBox="0 0 8 8" aria-hidden="true"><path d="M4 7 .5 1h7z" fill="currentColor"/></svg>';
+      const rupiah = (n) => `Rp ${Math.round(n).toLocaleString('id-ID')}`;
+      const $ = (id) => document.getElementById(id);
+
+      // Recipe classes, as in DESIGN.md.
+      const ghost = 'inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-sm px-3 type-ui whitespace-nowrap transition-colors disabled:pointer-events-none disabled:opacity-40 text-muted-foreground hover:bg-accent hover:text-foreground';
+      const iconButtonSmall = 'inline-flex size-7 shrink-0 items-center justify-center rounded-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground disabled:pointer-events-none disabled:opacity-40';
+      const badge = 'inline-flex h-5 items-center rounded-sm border border-border bg-muted px-1.5 text-xs leading-4 font-medium';
+      const pill = 'inline-flex h-5 items-center gap-1.5 rounded-full border border-border px-2 text-xs leading-4 font-medium whitespace-nowrap';
+      const tones = { Paid: 'bg-success', Due: 'bg-warning', Overdue: 'bg-negative', Draft: 'bg-muted-foreground', Refunded: 'bg-info' };
+      const statusPill = (s) => `<span class="${pill}"><span class="size-1.5 rounded-full ${tones[s]}" aria-hidden="true"></span>${s}</span>`;
+      const chip = 'inline-flex h-7 shrink-0 items-center gap-1.5 rounded-sm border border-border bg-card px-2.5 type-ui text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-primary aria-pressed:bg-primary/10 aria-pressed:text-foreground';
+      const tab = 'inline-flex h-9 shrink-0 items-center gap-1.5 border-b-2 border-transparent px-1 type-ui text-muted-foreground transition-colors hover:text-foreground aria-selected:border-primary aria-selected:text-foreground';
+      const pageButton = 'h-7 min-w-7 rounded-sm px-1.5 type-mono text-muted-foreground transition-colors hover:bg-accent hover:text-foreground aria-[current=page]:bg-accent aria-[current=page]:text-foreground';
+
+      // The sidebar: ghost buttons, the current page with the accent fill.
+      const nav = [
+        ['overview', 'Overview', '', true],
+        ['invoices', 'Invoices', '9'],
+        ['customers', 'Customers', ''],
+        ['subscriptions', 'Subscriptions', ''],
+        ['payments', 'Payments', ''],
+        ['services', 'Services', ''],
+        ['logs', 'Logs', ''],
+        ['settings', 'Settings', ''],
+        ['keys', 'API keys', ''],
+      ];
+      $('nav').innerHTML = nav
+        .map(
+          ([id, label, count, current]) =>
+            `${id === 'settings' ? '<span class="mt-3 mb-1 hidden px-3 type-overline text-muted-foreground lg:block">Workspace</span>' : ''}<a href="#${id}"${current ? ' aria-current="page"' : ''} class="${ghost} justify-start lg:w-full aria-[current=page]:bg-accent aria-[current=page]:text-foreground">${icons[id]}${label}${count ? `<span class="${badge} ml-auto font-mono">${count}</span>` : ''}</a>`,
+        )
+        .join('');
+
+      // Invoices for October so far: number, customer, plan, day issued, amount, status.
+      const invoices = `1040|Ayam Geprek Mbak Rini|Growth|14|1490000|Draft
+1039|Toko Mainan Ceria|Starter|14|490000|Draft
+1038|Klinik Gigi Senyum|Business|13|4212500|Due
+1037|Barbershop Gentleman Cimahi|Starter|13|490000|Paid
+1036|Rumah Jahit Melati|Starter|13|490000|Due
+1035|Toko Sepatu Langkah|Growth|12|1490000|Paid
+1034|Batik Sekar Arum|Growth|12|1732500|Paid
+1033|Es Teler Pak Jenggot|Starter|12|490000|Due
+1032|Martabak Bangka Asoy|Starter|11|563500|Paid
+1031|Gudeg Yu Narni|Growth|11|1490000|Paid
+1030|Toko Kain Saudara|Growth|11|1490000|Due
+1029|Sate Madura Cak Rukin|Starter|10|490000|Paid
+1028|Bakso Mas Bejo|Starter|10|490000|Paid
+1027|Mie Ayam Pak Kumis|Starter|10|612000|Paid
+1026|Toko Elektronik Sinar Jaya|Business|9|3900000|Paid
+1025|Pet Shop Sahabat Satwa|Growth|9|1490000|Due
+1024|Toko Buku Pelita|Starter|9|490000|Paid
+1023|Sekolah Bina Insani|Business|8|5137000|Paid
+1022|Hotel Puri Asih|Business|8|3900000|Due
+1021|PT Lintas Nusa Logistik|Business|7|6480000|Paid
+1020|CV Sumber Rejeki|Growth|7|1490000|Overdue
+1019|Koperasi Tani Makmur|Growth|7|2104000|Paid
+1018|Toko Emas Sinar Mulia|Business|6|3900000|Paid
+1017|Studio Foto Cahaya|Starter|6|490000|Paid
+1016|Penginapan Lembang Asri|Growth|6|1490000|Refunded
+1015|Distro Kreatif Bandung|Growth|5|1490000|Paid
+1014|Salon Ayu Cantik|Starter|5|490000|Overdue
+1013|Optik Terang Jaya|Starter|5|490000|Paid
+1012|RM Padang Salero Minang|Growth|4|1867500|Paid
+1011|UD Berkah Tani|Starter|4|490000|Paid
+1010|Toko Roti Mentari|Growth|4|1490000|Paid
+1009|Katering Dapur Ibu|Growth|3|1490000|Paid
+1008|Percetakan Mitra Grafika|Business|3|4475000|Paid
+1007|Laundry Bersih Wangi|Starter|3|490000|Overdue
+1006|Bengkel Maju Motor|Starter|2|490000|Paid
+1005|Apotek Sentosa Farma|Growth|2|1490000|Paid
+1004|Kedai Kopi Senja|Starter|2|527000|Paid
+1003|Toko Bangunan Jaya Abadi|Business|1|3900000|Paid
+1002|Klinik Pratama Medika|Business|1|4610000|Paid
+1001|Warung Bu Sari|Starter|1|490000|Paid`
+        .split('\n')
+        .map((line) => {
+          const [id, customer, plan, day, amount, status] = line.split('|');
+          return { id: `INV-${id}`, customer, plan, issued: Number(day), amount: Number(amount), status };
+        });
+
+      // Collections: paid against everything sent this month.
+      const sent = invoices.filter((i) => i.status !== 'Draft' && i.status !== 'Refunded');
+      const paid = sent.filter((i) => i.status === 'Paid');
+      const sum = (list) => list.reduce((total, i) => total + i.amount, 0);
+      const share = Math.round((sum(paid) / sum(sent)) * 100);
+      $('collected').innerHTML = `<div class="w-full"><div class="flex items-baseline justify-between"><span class="type-ui">Collected</span><span class="type-mono text-muted-foreground">${share}%</span></div><div role="progressbar" aria-label="Collected" aria-valuenow="${share}" aria-valuemin="0" aria-valuemax="100" class="mt-2 h-1 w-full overflow-hidden rounded-xs bg-secondary"><div class="h-full rounded-xs bg-primary" style="width: ${share}%"></div></div><p class="mt-2 type-caption text-muted-foreground"><span class="type-mono">${rupiah(sum(paid))}</span> of <span class="type-mono">${rupiah(sum(sent))}</span> sent</p></div>`;
+      const count = (s) => invoices.filter((i) => i.status === s).length;
+      $('collection-list').innerHTML = [
+        ['Paid', `${count('Paid')}`],
+        ['Due this week', `${count('Due')}`],
+        ['Overdue', `${count('Overdue')}`],
+        ['Average days to pay', '2.4'],
+      ]
+        .map(([label, value]) => `<li class="flex h-9 items-center justify-between gap-4 px-3"><span class="type-small text-muted-foreground">${label}</span><span class="type-mono">${value}</span></li>`)
+        .join('');
+
+      // A small seeded random, so every range draws the same numbers each time.
+      const seeded = (seed) => () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+      const spark = (values) => {
+        const min = Math.min(...values), max = Math.max(...values);
+        const pts = values.map((v, i) => [(i / (values.length - 1)) * 240, 46 - ((v - min) / (max - min || 1)) * 44]);
+        const line = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
+        return `<svg class="mt-3 h-12 w-full text-chart-1" viewBox="0 0 240 48" preserveAspectRatio="none" aria-hidden="true"><path d="${line} L240 48 L0 48 Z" fill="currentColor" fill-opacity="0.1"/><path d="${line}" fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>`;
+      };
+      const walk = (seed, n, from, to, noise) => {
+        const random = seeded(seed);
+        return Array.from({ length: n }, (_, i) => from + ((to - from) * i) / (n - 1) + (random() - 0.5) * noise * (i && i < n - 1 ? 1 : 0));
+      };
+
+      // The figures for each date range. A delta is good or bad on its own terms: more failed payments is bad.
+      const ranges = {
+        '7d': { since: 'vs previous 7 days', mrr: 0.8, customers: [2, 0], failed: [2, -1, '1 of 2'], uptime: ['100.00%', 0.02, 0], days: 7, unit: 'Rp million per day' },
+        '30d': { since: 'vs previous 30 days', mrr: 4.2, customers: [9, 3], failed: [7, 3, '4 of 7'], uptime: ['99.98%', 0.01, 1], days: 30, unit: 'Rp million per day' },
+        '90d': { since: 'vs previous 90 days', mrr: 11.6, customers: [21, 7], failed: [18, -4, '15 of 18'], uptime: ['99.95%', -0.02, 3], weeks: 13, unit: 'Rp million per week' },
+        '12m': { since: 'vs previous 12 months', mrr: 46.3, customers: [52, 19], failed: [71, -12, '64 of 71'], uptime: ['99.96%', 0.05, 9], months: 12, unit: 'Rp million per month' },
+      };
+      const delta = (value, good, text) => `<span class="inline-flex items-center gap-1 type-ui ${good ? 'text-positive' : 'text-negative'}">${value >= 0 ? up : down}${text}</span>`;
+      const stat = ({ label, caption, value, change, line, row, wide }) =>
+        `<article class="flex w-full flex-col rounded-lg border border-border bg-card p-4${wide}"><div class="flex items-center justify-between gap-2"><span class="type-overline text-muted-foreground">${label}</span>${caption ? `<span class="truncate type-caption text-muted-foreground">${caption}</span>` : ''}</div><div class="mt-1 flex flex-wrap items-baseline gap-x-2"><span class="type-display">${value}</span>${change}</div>${line}<div class="mt-3 flex items-baseline justify-between gap-2 border-t border-border pt-3"><span class="type-small text-muted-foreground">${row[0]}</span><span class="type-mono">${row[1]}</span></div></article>`;
+      const renderKpis = (key) => {
+        const r = ranges[key];
+        const n = r.days ?? r.weeks ?? r.months;
+        $('kpis').innerHTML = [
+          stat({ label: 'MRR', caption: r.since, value: '<span class="text-muted-foreground">Rp</span> 184.250.000', change: delta(r.mrr, true, `${r.mrr}%`), line: spark(walk(11, 15, 184.25 / (1 + r.mrr / 100), 184.25, r.mrr / 6)), row: ['ARR', rupiah(184250000 * 12)], wide: ' sm:col-span-2' }),
+          stat({ label: 'Active customers', caption: '', value: '128', change: delta(r.customers[0], true, `${r.customers[0]}`), line: spark(walk(23, 15, 128 - r.customers[0], 128, r.customers[0] / 3)), row: ['Churned', `${r.customers[1]}`], wide: '' }),
+          stat({ label: 'Failed payments', caption: '', value: `${r.failed[0]}`, change: delta(r.failed[1], r.failed[1] < 0, `${Math.abs(r.failed[1])}`), line: spark(walk(37, 15, 2, 6, 5)), row: ['Recovered', r.failed[2]], wide: '' }),
+          stat({ label: 'API uptime', caption: '', value: r.uptime[0], change: delta(r.uptime[1], r.uptime[1] >= 0, `${Math.abs(r.uptime[1]).toFixed(2)} pt`), line: spark(walk(41, 15, 99.9, 100, 0.08)), row: ['Incidents', `${r.uptime[2]}`], wide: ' sm:col-span-2 lg:col-span-1' }),
+        ].join('');
+        $('chart-unit').textContent = r.unit;
+        drawChart(key);
+      };
+
+      // Revenue per day, week or month: subscriptions (chart-1) under usage (chart-2), a 2px gap between them.
+      const short = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const dayLabel = (d) => `${d.getUTCDate()} ${short[d.getUTCMonth()]}`;
+      const months = ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
+      const buckets = (key) => {
+        const r = ranges[key];
+        const random = seeded(key.length * 97 + (r.days ?? r.weeks ?? r.months));
+        const today = new Date(Date.UTC(2026, 9, 14));
+        if (r.months) return months.map((m, i) => ({ label: m, title: `${m} ${i < 2 ? 2025 : 2026}`, sub: 103 + i * 5.4 + random() * 4, use: 23 + i * 1.3 + random() * 3 }));
+        if (r.weeks) return Array.from({ length: 13 }, (_, i) => {
+          const end = new Date(today - (12 - i) * 7 * 864e5);
+          const label = dayLabel(end);
+          return { label, title: `Week to ${label}`, sub: 35.5 + i * 0.32 + random() * 1.6, use: 7.6 + random() * 1.4 };
+        });
+        return Array.from({ length: r.days }, (_, i) => {
+          const day = new Date(today - (r.days - 1 - i) * 864e5);
+          const weekend = [0, 6].includes(day.getUTCDay());
+          const label = dayLabel(day);
+          return { label, title: `${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day.getUTCDay()]} ${label}`, sub: (weekend ? 3.2 : 5.6) + random() * 1.1, use: (weekend ? 0.7 : 1.2) + random() * 0.5 };
+        });
+      };
+      let current = '30d';
+      const drawChart = (key = current) => {
+        const box = $('chart');
+        const data = buckets(key);
+        const W = box.clientWidth, H = box.clientHeight;
+        const left = 32, bottom = 22, top = 6;
+        // Before the box is laid out it has no size; the ResizeObserver draws it once it has.
+        if (W <= left || H <= bottom + top) return;
+        const max = Math.max(...data.map((d) => d.sub + d.use));
+        const step = [1, 2, 5, 10, 20, 25, 50, 100].find((s) => (max / s) <= 4.5) ?? 100;
+        const ceiling = Math.ceil(max / step) * step;
+        const y = (v) => H - bottom - (v / ceiling) * (H - bottom - top);
+        const slot = (W - left) / data.length;
+        const bar = Math.max(4, Math.min(28, slot * 0.62));
+        const every = Math.ceil(data.length / Math.max(2, Math.floor((W - left) / 64)));
+        let svg = '';
+        for (let v = 0; v <= ceiling; v += step) svg += `<line x1="${left}" x2="${W}" y1="${y(v)}" y2="${y(v)}" class="stroke-border" stroke-width="1"/><text x="${left - 8}" y="${y(v) + 4}" text-anchor="end" class="fill-muted-foreground font-mono text-xs">${v}</text>`;
+        data.forEach((d, i) => {
+          const x = left + i * slot + (slot - bar) / 2;
+          const base = y(0), subTop = y(d.sub), useTop = y(d.sub + d.use) - 2;
+          const r = Math.min(4, bar / 2);
+          svg += `<g data-i="${i}"><rect x="${left + i * slot}" y="${top}" width="${slot}" height="${H - bottom - top}" class="fill-accent opacity-0 transition-opacity" data-hover/><rect x="${x}" y="${subTop}" width="${bar}" height="${base - subTop}" class="fill-chart-1"/><path d="M${x} ${subTop - 2} V${useTop + r} Q${x} ${useTop} ${x + r} ${useTop} H${x + bar - r} Q${x + bar} ${useTop} ${x + bar} ${useTop + r} V${subTop - 2} Z" class="fill-chart-2"/>${i % every === (data.length - 1) % every ? `<text x="${i === data.length - 1 ? x + bar : x + bar / 2}" y="${H - 6}" text-anchor="${i === data.length - 1 ? 'end' : 'middle'}" class="fill-muted-foreground font-mono text-xs">${d.label}</text>` : ''}</g>`;
+        });
+        box.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Revenue by ${key === '12m' ? 'month' : key === '90d' ? 'week' : 'day'}, subscriptions and usage">${svg}</svg><div id="chart-tip" role="tooltip" hidden class="pointer-events-none absolute z-10 mb-2 w-max max-w-56 -translate-x-1/2 -translate-y-full rounded-sm border border-border bg-popover px-2 py-1 type-caption text-popover-foreground shadow-lg"></div>`;
+        const total = sum(data.map((d) => ({ amount: d.sub + d.use })));
+        const subs = Math.round((sum(data.map((d) => ({ amount: d.sub }))) / total) * 100);
+        $('chart-total').innerHTML = `Total <span class="type-mono text-foreground">${rupiah(total * 1e6)}</span> · subscriptions ${subs}% · usage ${100 - subs}%`;
+        box.onpointermove = (event) => {
+          const g = event.target.closest('g[data-i]');
+          for (const h of box.querySelectorAll('[data-hover]')) h.classList.toggle('opacity-40', h.parentElement === g);
+          const tip = $('chart-tip');
+          if (!g) return (tip.hidden = true);
+          const d = data[g.dataset.i];
+          tip.hidden = false;
+          tip.innerHTML = `<span class="block type-ui">${d.title}</span><span class="flex justify-between gap-4"><span class="text-muted-foreground">Subscriptions</span><span class="font-mono">${rupiah(d.sub * 1e6)}</span></span><span class="flex justify-between gap-4"><span class="text-muted-foreground">Usage</span><span class="font-mono">${rupiah(d.use * 1e6)}</span></span>`;
+          tip.style.left = `${Math.min(Math.max(left + (Number(g.dataset.i) + 0.5) * slot, 100), W - 100)}px`;
+          tip.style.top = `${y(d.sub + d.use) - 8}px`;
+        };
+        box.onpointerleave = () => {
+          $('chart-tip').hidden = true;
+          for (const h of box.querySelectorAll('[data-hover]')) h.classList.remove('opacity-40');
+        };
+      };
+      new ResizeObserver(() => drawChart()).observe($('chart'));
+
+      $('range').addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        for (const b of $('range').children) b.setAttribute('aria-pressed', b === button);
+        current = button.dataset.range;
+        renderKpis(current);
+      });
+
+      // The invoice table: a status tab, a plan chip and the search narrow it; headers sort it; 8 rows a page.
+      const state = { tab: 'All', plan: 'All plans', query: '', sort: ['issued', 'descending'], page: 0, selected: new Set() };
+      const tabs = { All: () => true, Open: (i) => i.status === 'Due' || i.status === 'Overdue', Overdue: (i) => i.status === 'Overdue', Drafts: (i) => i.status === 'Draft' };
+      $('tabs').innerHTML = Object.keys(tabs)
+        .map((name, i) => `<button type="button" role="tab" id="tab-${name}" aria-selected="${i === 0}" aria-controls="invoice-panel"${i ? ' tabindex="-1"' : ''} class="${tab}">${name}<span class="${badge} font-mono">${invoices.filter(tabs[name]).length}</span></button>`)
+        .join('');
+      $('invoice-panel').setAttribute('aria-labelledby', 'tab-All');
+      $('plans').innerHTML = ['All plans', 'Starter', 'Growth', 'Business'].map((p, i) => `<button type="button" aria-pressed="${i === 0}" class="${chip}">${p}</button>`).join('');
+
+      const visible = () => {
+        const q = state.query.trim().toLowerCase();
+        const [key, dir] = state.sort;
+        return invoices
+          .filter(tabs[state.tab])
+          .filter((i) => state.plan === 'All plans' || i.plan === state.plan)
+          .filter((i) => !q || i.id.toLowerCase().includes(q) || i.customer.toLowerCase().includes(q))
+          .sort((a, b) => (a[key] > b[key] ? 1 : a[key] < b[key] ? -1 : 0) * (dir === 'ascending' ? 1 : -1) || b.id.localeCompare(a.id));
+      };
+      const renderTable = () => {
+        const list = visible();
+        const pages = Math.max(1, Math.ceil(list.length / 8));
+        state.page = Math.min(state.page, pages - 1);
+        const rows = list.slice(state.page * 8, state.page * 8 + 8);
+        $('rows').innerHTML = rows.length
+          ? rows
+              .map((i) => {
+                const on = state.selected.has(i.id);
+                return `<tr class="h-9 border-b border-border last:border-b-0 transition-colors hover:bg-accent/40 data-selected:bg-primary/10"${on ? ' data-selected' : ''}><td class="px-2 whitespace-nowrap"><input type="checkbox" value="${i.id}"${on ? ' checked' : ''} class="ledger-checkbox" aria-label="Select ${i.id}" /></td><td class="px-2 whitespace-nowrap type-mono">${i.id}</td><td class="px-2 whitespace-nowrap">${i.customer}</td><td class="px-2 whitespace-nowrap"><span class="${badge} text-muted-foreground">${i.plan}</span></td><td class="px-2 whitespace-nowrap type-mono text-muted-foreground">${i.issued} Oct</td><td class="px-2 whitespace-nowrap type-mono text-right">${rupiah(i.amount)}</td><td class="px-2 whitespace-nowrap">${statusPill(i.status)}</td><td class="px-2 whitespace-nowrap"><button type="button" aria-label="Actions for ${i.id}" class="${iconButtonSmall}">${icons.more}</button></td></tr>`;
+              })
+              .join('')
+          : `<tr class="h-9"><td colspan="8" class="px-2 type-small text-muted-foreground">No invoices match “${state.query}”.</td></tr>`;
+        const boxes = rows.filter((i) => state.selected.has(i.id)).length;
+        $('select-all').checked = rows.length > 0 && boxes === rows.length;
+        $('select-all').indeterminate = boxes > 0 && boxes < rows.length;
+        const from = list.length ? state.page * 8 + 1 : 0;
+        const numbers = Array.from({ length: pages }, (_, n) => `<button type="button" data-page="${n}"${n === state.page ? ' aria-current="page"' : ''} class="${pageButton}">${n + 1}</button>`).join('');
+        $('pages').innerHTML = `<span class="type-small text-muted-foreground"><span class="type-mono text-foreground">${from}–${from + rows.length - (list.length ? 1 : 0)}</span> of <span class="type-mono text-foreground">${list.length}</span> invoices</span><div class="flex items-center gap-0.5"><button type="button" aria-label="Previous page" data-page="${state.page - 1}"${state.page === 0 ? ' disabled' : ''} class="${iconButtonSmall}">${icons.chevronLeft}</button>${numbers}<button type="button" aria-label="Next page" data-page="${state.page + 1}"${state.page >= pages - 1 ? ' disabled' : ''} class="${iconButtonSmall}">${icons.chevronRight}</button></div>`;
+        const n = state.selected.size;
+        $('selection').textContent = n ? `${n} selected` : '';
+        $('remind').disabled = n === 0;
+      };
+
+      const selectTab = (button) => {
+        for (const t of $('tabs').children) {
+          t.setAttribute('aria-selected', t === button);
+          t.tabIndex = t === button ? 0 : -1;
+        }
+        $('invoice-panel').setAttribute('aria-labelledby', button.id);
+        state.tab = button.id.replace('tab-', '');
+        state.page = 0;
+        renderTable();
+      };
+      $('tabs').addEventListener('click', (event) => event.target.closest('[role=tab]') && selectTab(event.target.closest('[role=tab]')));
+      $('tabs').addEventListener('keydown', (event) => {
+        const all = [...$('tabs').children];
+        const index = all.indexOf(event.target.closest('[role=tab]'));
+        const keys = { ArrowRight: index + 1, ArrowLeft: index - 1 + all.length, Home: 0, End: all.length - 1 };
+        if (!(event.key in keys)) return;
+        event.preventDefault();
+        const next = all[keys[event.key] % all.length];
+        selectTab(next);
+        next.focus();
+      });
+      $('plans').addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        for (const b of $('plans').children) b.setAttribute('aria-pressed', b === button);
+        state.plan = button.textContent;
+        state.page = 0;
+        renderTable();
+      });
+      $('search').addEventListener('input', (event) => {
+        state.query = event.target.value;
+        state.page = 0;
+        renderTable();
+      });
+      document.querySelector('#invoices thead').addEventListener('click', (event) => {
+        const th = event.target.closest('.ledger-sort')?.closest('th');
+        if (!th) return;
+        const dir = th.getAttribute('aria-sort') === 'ascending' ? 'descending' : 'ascending';
+        for (const h of th.parentElement.querySelectorAll('[aria-sort]')) h.setAttribute('aria-sort', 'none');
+        th.setAttribute('aria-sort', dir);
+        state.sort = [th.dataset.key, dir];
+        renderTable();
+      });
+      $('invoices').addEventListener('change', (event) => {
+        const box = event.target;
+        if (box.type !== 'checkbox') return;
+        if (box.id === 'select-all') {
+          for (const b of $('rows').querySelectorAll('input[type=checkbox]')) box.checked ? state.selected.add(b.value) : state.selected.delete(b.value);
+        } else box.checked ? state.selected.add(box.value) : state.selected.delete(box.value);
+        renderTable();
+      });
+      $('pages').addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-page]');
+        if (!button) return;
+        state.page = Number(button.dataset.page);
+        renderTable();
+      });
+      $('remind').addEventListener('click', () => {
+        $('selection').textContent = `Reminder sent to ${state.selected.size}`;
+        state.selected.clear();
+        setTimeout(renderTable, 1600);
+        $('remind').disabled = true;
+        for (const b of $('rows').querySelectorAll('input[type=checkbox]')) b.checked = false;
+        for (const tr of $('rows').querySelectorAll('tr[data-selected]')) tr.removeAttribute('data-selected');
+        $('select-all').checked = $('select-all').indeterminate = false;
+      });
+
+      // The activity log, newest first.
+      const log = [
+        ['12:04:31', 'info', 'text-info', 'billing', 'INV-1037 paid by QRIS, Rp 490.000'],
+        ['12:03:58', 'info', 'text-info', 'deploy', 'api v3.8.2 → production in 41 s'],
+        ['12:02:10', 'warn', 'text-warning', 'billing', 'Card declined, CV Sumber Rejeki (1 of 3)'],
+        ['11:58:44', 'info', 'text-info', 'dunning', '6 reminders sent by email and WhatsApp'],
+        ['11:40:02', 'error', 'text-negative', 'webhook', 'Hotel Puri Asih returned 503, retry in 5m'],
+        ['11:12:57', 'info', 'text-info', 'deploy', 'worker v2.1.0 → production in 38 s'],
+        ['11:05:19', 'info', 'text-info', 'billing', 'INV-1036 sent to Rumah Jahit Melati'],
+        ['10:47:03', 'warn', 'text-warning', 'api', 'p95 412 ms for 3 min, budget 250 ms'],
+      ];
+      $('log').innerHTML = log
+        .map(([time, level, tone, source, message]) => `<span class="flex gap-3 whitespace-nowrap"><span class="shrink-0 text-muted-foreground">${time}</span><span class="w-10 shrink-0 ${tone}">${level}</span><span class="w-16 shrink-0 text-muted-foreground">${source}</span><span>${message}</span></span>`)
+        .join('');
+
+      // Switches flip; turning retries off disables the schedule under it.
+      document.addEventListener('click', (event) => {
+        const sw = event.target.closest('[role=switch]');
+        if (!sw) return;
+        const on = sw.getAttribute('aria-checked') !== 'true';
+        sw.setAttribute('aria-checked', on);
+        if (sw.id === 'retry') {
+          $('interval').disabled = !on;
+          for (const r of $('after').querySelectorAll('input')) r.disabled = !on;
+          $('after').classList.toggle('opacity-40', !on);
+        }
+      });
+      const syncSlider = (el) => {
+        el.style.setProperty('--slider-fill', `${((el.value - el.min) / (el.max - el.min)) * 100}%`);
+        const out = document.querySelector(`output[for="${el.id}"]`);
+        out.textContent = `${el.value}${el.value === '1' ? ' day' : out.dataset.unit}`;
+      };
+      $('interval').addEventListener('input', (event) => syncSlider(event.target));
+      syncSlider($('interval'));
+
+      // Refresh shows the spinner for a moment, then the new time.
+      $('refresh').addEventListener('click', () => {
+        $('refresh').disabled = true;
+        $('syncing').hidden = false;
+        setTimeout(() => {
+          $('syncing').hidden = true;
+          $('refresh').disabled = false;
+          $('updated').querySelector('.type-mono').textContent = '12:05:02';
+        }, 900);
+      });
+
+      // Shortcuts: ⌘K or Ctrl+K searches, G then I goes to the invoices.
+      let g = 0;
+      document.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+          event.preventDefault();
+          $('search').focus();
+          return;
+        }
+        if (event.target.matches('input, textarea')) return;
+        if (event.key === 'g') g = Date.now();
+        else if (event.key === 'i' && Date.now() - g < 1000) $('tab-All').focus();
+      });
+
+      renderKpis(current);
+      renderTable();
+    </script>
+  </body>
+</html>
