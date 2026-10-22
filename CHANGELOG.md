@@ -3,6 +3,14 @@
 Ledger uses semantic versions. While it is in beta, a minor version adds or changes tokens, components or rules,
 and a patch fixes them. Every version is a git tag (`v0.1.0`) and an entry in the design site's record.
 
+## 0.2.2 (2026-10-24)
+
+- The highlighted badge keeps its word in `foreground` and marks itself with a primary border and a 10% primary
+  tint, the way a selected chip is marked. Its violet word read 3.7:1 on the dark badge, under the 4.5:1 a 12px
+  word needs, and broke the rule that `primary` is a fill, not a text color; the word now reads 15.7:1 in light
+  and 14.1:1 in dark. The Badge recipe and the gallery's Badge card change; the demo has no highlighted badge.
+- Figma: not changed in this release; the Badge component's highlighted tone still shows the violet word.
+
 ## 0.2.1 (2026-10-14)
 
 - The gallery groups its 24 components under six category headings (Data, Input, Text, Navigation, Status,

@@ -538,7 +538,7 @@ Use it for a view switch of two to five short options (Day / Week / Month, a dat
 ```
 
 - Version or ID: add `font-mono`.
-- Quiet: add `text-muted-foreground`. Highlighted (one per view): `border-primary/40 text-primary`, for a single word only, such as New.
+- Quiet: add `text-muted-foreground`. Highlighted (one per view): swap `border-border bg-muted` for `border-primary bg-primary/10` and keep the word in `foreground`, the way a selected chip is marked, for a single word only, such as New. The word reads 15.7:1 and 14.1:1 on the tint, and the primary border is 5.9:1 and 3.9:1 against the card; violet text would be 3.7:1 on the dark badge.
 
 ### Status pill
 
