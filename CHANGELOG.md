@@ -9,6 +9,10 @@ and a patch fixes them. Every version is a git tag (`v0.1.0`) and an entry in th
   tint, the way a selected chip is marked. Its violet word read 3.7:1 on the dark badge, under the 4.5:1 a 12px
   word needs, and broke the rule that `primary` is a fill, not a text color; the word now reads 15.7:1 in light
   and 14.1:1 in dark. The Badge recipe and the gallery's Badge card change; the demo has no highlighted badge.
+- The gallery's title, Ledger, is its `h1`, for screen readers; it looks the same.
+- The Code recipe's log block takes `tabindex="0"`, `role="region"` and an `aria-label`, so a keyboard can scroll
+  it sideways; the demo's activity log does the same, named "Activity log". Both show the focus ring when focused
+  and otherwise look the same.
 - Figma: not changed in this release; the Badge component's highlighted tone still shows the violet word.
 
 ## 0.2.1 (2026-10-14)

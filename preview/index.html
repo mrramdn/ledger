@@ -16,10 +16,10 @@
   <body>
     <header class="border-b border-border bg-card">
       <div class="mx-auto flex h-10 max-w-[1600px] items-center justify-between px-4">
-        <p class="flex items-baseline gap-2">
-          <span class="font-mono text-sm font-semibold tracking-tight">Ledger</span>
+        <div class="flex items-baseline gap-2">
+          <h1 class="font-mono text-sm font-semibold tracking-tight">Ledger</h1>
           <span class="type-caption text-muted-foreground">Beta</span>
-        </p>
+        </div>
         <div class="flex items-center gap-3">
           <span id="meta" class="hidden type-mono text-xs text-muted-foreground sm:inline"></span>
           <button
@@ -166,7 +166,7 @@
           name: 'Code',
           category: 'Text',
           span: true,
-          html: `<div class="w-full overflow-x-auto rounded-md border border-border bg-muted p-3 type-mono"><div class="flex flex-col gap-1">${log('12:04:31', 'info', 'text-info', 'Task started')}${log('12:04:33', 'warn', 'text-warning', 'Retry 1 of 3')}${log('12:04:36', 'error', 'text-negative', 'Request timed out')}${log('12:04:39', 'info', 'text-info', 'Done in 8.2 s')}</div></div><p class="mt-3 type-small text-muted-foreground">Inline code uses the same face: <code class="rounded-xs bg-muted px-1 py-0.5 type-mono">pnpm build</code></p>`,
+          html: `<div class="w-full overflow-x-auto rounded-md border border-border bg-muted p-3 type-mono" tabindex="0" role="region" aria-label="Log"><div class="flex flex-col gap-1">${log('12:04:31', 'info', 'text-info', 'Task started')}${log('12:04:33', 'warn', 'text-warning', 'Retry 1 of 3')}${log('12:04:36', 'error', 'text-negative', 'Request timed out')}${log('12:04:39', 'info', 'text-info', 'Done in 8.2 s')}</div></div><p class="mt-3 type-small text-muted-foreground">Inline code uses the same face: <code class="rounded-xs bg-muted px-1 py-0.5 type-mono">pnpm build</code></p>`,
         },
         {
           name: 'Button sizes',

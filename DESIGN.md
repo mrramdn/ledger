@@ -621,10 +621,10 @@ A 20px key in the mono face with a 2px bottom border. Keys of one shortcut sit 4
 
 ### Code
 
-A log block: a 6px `muted` panel with one mono line per entry: a muted timestamp, the level as a word in `info`, `warning` or `negative`, and the message. Lines do not wrap; the block scrolls sideways.
+A log block: a 6px `muted` panel with one mono line per entry: a muted timestamp, the level as a word in `info`, `warning` or `negative`, and the message. Lines do not wrap; the block scrolls sideways, so it takes `tabindex="0"`, `role="region"` and an `aria-label` naming the log, and a keyboard can scroll it.
 
 ```html
-<div class="w-full overflow-x-auto rounded-md border border-border bg-muted p-3 type-mono"><div class="flex flex-col gap-1"><span class="flex gap-3 whitespace-nowrap"><span class="shrink-0 text-muted-foreground">12:04:31</span><span class="w-10 shrink-0 text-info">info</span><span>Task started</span></span><span class="flex gap-3 whitespace-nowrap"><span class="shrink-0 text-muted-foreground">12:04:33</span><span class="w-10 shrink-0 text-warning">warn</span><span>Retry 1 of 3</span></span></div></div>
+<div class="w-full overflow-x-auto rounded-md border border-border bg-muted p-3 type-mono" tabindex="0" role="region" aria-label="Log"><div class="flex flex-col gap-1"><span class="flex gap-3 whitespace-nowrap"><span class="shrink-0 text-muted-foreground">12:04:31</span><span class="w-10 shrink-0 text-info">info</span><span>Task started</span></span><span class="flex gap-3 whitespace-nowrap"><span class="shrink-0 text-muted-foreground">12:04:33</span><span class="w-10 shrink-0 text-warning">warn</span><span>Retry 1 of 3</span></span></div></div>
 ```
 
 A source column (`w-16 shrink-0 text-muted-foreground`) may sit between the level and the message. Inline code in prose: `<code class="rounded-xs bg-muted px-1 py-0.5 type-mono">pnpm build</code>`.
