@@ -13,6 +13,7 @@ A dense, dark-first design system for data-heavy product interfaces: dashboards,
 | `preview/index.html` | Component gallery: one card per recipe with placeholder content, showing variants, sizes and states. Cards are grouped under category headings, with a dark mode switch and copy and reset buttons per card. |
 | `preview/demo.html` | An example screen, the billing and operations dashboard of a small software company, built only from the recipes. Dark first. |
 | `CHANGELOG.md` | What changed in each version. |
+| `LICENSE` | MIT for `ledger.css` and everything in `preview/`; CC BY 4.0 for `DESIGN.md` and the Figma library. |
 
 Figma: [Ledger Design System](https://www.figma.com/design/81WUGAI2i0QQoUpjy271bm) (pages Cover, Foundations, Components and Example; Example rebuilds the demo screen from instances in light and dark).
 
@@ -47,11 +48,15 @@ Then open `preview/index.html` for the component gallery, or `preview/demo.html`
 
 The version is in `package.json`, `CHANGELOG.md` says what changed, and every release is a git tag. To release:
 
-1. Change the files and run `pnpm build`, so `preview/preview.css` matches the gallery.
-2. Raise `version` in `package.json` and add an entry to `CHANGELOG.md`.
-3. Commit, tag `v<version>` (`git tag -a v0.2.0 -m "Ledger 0.2.0"`) and push with `git push --follow-tags`.
-4. On the design site, sync this folder and add the version to Ledger's record. The site's tests fail while the
-   record states a different version from the synced files.
+1. Change the files and run `pnpm build`, so `preview/preview.css` matches.
+2. Raise the version everywhere it is written: `version` in `package.json`, a new entry at the top of `CHANGELOG.md`, the `/*!` banner on line 1 of `ledger.css` and `preview/input.css`, and `--ledger-build` in `ledger.css`'s `:root`. Run `pnpm build` again and `pnpm check`, which fails while any of them differ.
+3. Commit, tag `v<version>` (`git tag -a v0.3.0 -m "Ledger 0.3.0"`) and push with `git push --follow-tags`, then publish a GitHub Release from the tag with the CHANGELOG entry.
+4. On the design site, run `pnpm sync:system ledger <this folder>`, put the pictures in `public/images/ledger/<version>/`, and add the version to the record. The site's tests fail while the record, the synced files or a version the gallery names disagree.
+5. Optionally, after the site deploys, save a Wayback snapshot of the product page in both languages.
+
+## Licence
+
+The code is MIT: `ledger.css` and everything in `preview/` (HTML and CSS). `DESIGN.md` and the Figma library "Ledger Design System" are CC BY 4.0: copy and adapt them, also commercially, with credit to "Ledger by Rifki Ramdani, https://uiux.mrramdn.com/en/systems/ledger". The full text is in `LICENSE`.
 
 ## Where the look comes from
 

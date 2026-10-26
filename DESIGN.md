@@ -264,6 +264,8 @@ components:
 
 ## Overview
 
+Ledger is by Rifki Ramdani (https://uiux.mrramdn.com/en/systems/ledger). This file is licensed under CC BY 4.0: copy and adapt it, with credit. The CSS and HTML are MIT.
+
 Ledger is a dense, dark-first system for data-heavy product interfaces: dashboards, admin consoles, analytics, logs, billing and back-office tools, developer tools. One rule explains every decision: the chrome stays neutral and quiet so the data can carry color. Panels are graphite (white in light mode) with hairline borders, text comes in two steps, and a single violet marks actions, selection and focus. Status and chart colors appear only on data, and never alone: a delta has a sign, a status has a dot and a word. Everything sits on a 4px grid, every number is set in tabular figures, and the default control is 32px tall.
 
 Dark mode is the reference, light mode is just as complete, and both are driven by the `.dark` class on a parent element, never by `prefers-color-scheme`.
@@ -314,7 +316,7 @@ Use semantic tokens only. The default Tailwind palette is removed in `ledger.css
 | `input` | `#848D9C` | `#5B6472` | Outline of fields and secondary buttons, the off track of a toggle |
 | `ring` | `#6246EA` | `#7F56F0` | Focus ring |
 
-Dark mode is the `.dark` class on a parent element.
+Dark mode is the `.dark` class on a parent element. The `.dark` block also sets `color-scheme: dark`, so native controls and scrollbars follow the theme.
 
 Rules:
 
@@ -662,3 +664,4 @@ Every interactive element gets the global focus ring from `ledger.css`: a 2px `r
 - Don't use pills or large radii; controls are 4px, panels 6px, cards 8px. Only the radio and the status pill are round.
 - Don't use the default Tailwind palette, hard-coded hex values, gradients or tinted panels.
 - Don't draw a chart in a status color, and don't draw one on the page gray without labels.
+- Don't put an icon, a logo mark or an initials badge beside the wordmark or a headline: both are text only.

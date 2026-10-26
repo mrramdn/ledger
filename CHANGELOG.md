@@ -3,6 +3,25 @@
 Ledger uses semantic versions. While it is in beta, a minor version adds or changes tokens, components or rules,
 and a patch fixes them. Every version is a git tag (`v0.1.0`) and an entry in the design site's record.
 
+## 0.2.3 (2026-10-26)
+
+- A licence: `LICENSE` puts `ledger.css` and everything in `preview/` under the MIT License, and `DESIGN.md` and
+  the Figma library under CC BY 4.0, so anyone may copy and adapt them, with credit. `package.json` says
+  `MIT AND CC-BY-4.0`, line 1 of `ledger.css` and of the built `preview/preview.css` carries a `/*!` banner with
+  the version and the licence, and `DESIGN.md` opens its Overview with the credit line.
+- `ledger.css` sets `color-scheme: light` in `:root` and `color-scheme: dark` in `.dark`, so native controls and
+  scrollbars follow the theme. In dark mode the demo's phone navigation showed a light scrollbar under the dark
+  tabs; it is dark now.
+- `ledger.css` names the release it came from in a `--ledger-build` property in `:root`. It is not a design
+  token and nothing reads it; it only shows where a copied file came from.
+- The release steps in the README name every place the version is written, and `pnpm check`
+  (`scripts/check-version.mjs`) fails while `package.json`, this file, the banners and `--ledger-build`
+  disagree.
+- The demo's sidebar names Anyam in words only, without the A block beside it, and `DESIGN.md`'s Do's and Don'ts
+  say the wordmark and headlines carry no icon, logo mark or initials badge.
+- Figma: the Badge's highlighted tone keeps its word in foreground with a primary border and a 10% primary tint,
+  as in the web build since 0.2.2.
+
 ## 0.2.2 (2026-10-24)
 
 - The highlighted badge keeps its word in `foreground` and marks itself with a primary border and a 10% primary
